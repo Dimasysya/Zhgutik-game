@@ -589,7 +589,7 @@ body:JSON.stringify(me)
 if(!putRes.ok)throw new Error('Запись запрещена: '+putRes.status);
 let r=await fetch(LB_BASE+'.json');
 let data=r.ok?await r.json():{};
-let arr=data?Object.values(data):[];
+let arr=data?Object.values(data).filter(v=>v&&typeof v.nick==='string'&&typeof v.best==='number'):[];
 arr.sort((a,b)=>b.best-a.best);arr=arr.slice(0,50);
 localStorage.setItem('fl_lb_cache',JSON.stringify(arr));
 if(forceShow)renderLbList(arr,'🌐 Онлайн-рейтинг обновлён ('+arr.length+' игроков)');
