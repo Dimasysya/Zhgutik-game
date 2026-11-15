@@ -650,8 +650,11 @@ else if(lv%2===0)BP_REWARDS.push({lv:lv,tp:'atp',v:80+lv*15,t:'💎 '+(80+lv*15)
 else BP_REWARDS.push({lv:lv,tp:'dna',v:100+lv*20,t:'🧬 '+(100+lv*20)+' ДНК'});
 }
 function openBpModal(tab=0){
-snd('click');checkDailyQuests();
-for(let i=0;i<4;i++)document.getElementById('evTab'+i).classList.toggle('act',i===tab);
+snd('click');
+if(!save.bp||typeof save.bp!=='object')save.bp={xp:0,claim:{},day:'',q:[]};
+if(!save.bp.claim)save.bp.claim={};
+checkDailyQuests();
+for(let i=0;i<4;i++){let tb=document.getElementById('evTab'+i);if(tb)tb.classList.toggle('act',i===tab)}
 let lv=Math.min(30,Math.floor(save.bp.xp/100)+1),rem=lv>=30?0:(100-(save.bp.xp%100));
 document.getElementById('bpLvTxt').innerText=lv;
 document.getElementById('bpRemTxt').innerText=lv>=30?'МАКС':(rem+' XP');
