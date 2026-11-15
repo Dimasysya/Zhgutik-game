@@ -1,0 +1,16 @@
+{
+  "name": "Жгутиконосцы 3.2",
+  "short_name": "Жгутиконосцы",
+  "start_url": "./index.html",
+  "display": "fullscreen",
+  "orientation": "portrait",
+  "background_color": "#02080e",
+  "theme_color": "#02080e",
+  "icons": [
+    {
+      "src": "https://flaticon.com",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
