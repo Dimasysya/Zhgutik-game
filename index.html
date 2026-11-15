@@ -68,6 +68,8 @@ h1{margin:0;font-size:19px;color:#00f5d4;letter-spacing:1px}
 #dodgeBtn{position:absolute;bottom:90px;right:48px;width:58px;height:58px;border-radius:50%;color:#00f5d4;border-color:rgba(0,245,212,.6);font-weight:bold;font-size:10px;display:none;align-items:center;justify-content:center;z-index:10;text-align:center}
 textarea.svtxt{width:100%;height:78px;background:rgba(0,0,0,.5);color:#00f5d4;border:1px solid #7ef9ff;border-radius:8px;padding:6px;font-size:10px;resize:none;user-select:text;-webkit-user-select:text}
 </style>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#02080e">
 </head>
 <body>
 <div id="achPop"></div>
@@ -1412,6 +1414,7 @@ if(!inMenu&&mini!==1&&mini!==2&&mini!==5){mx.clearRect(0,0,74,74);let s=74/W;if(
 }
 window.onerror=function(m,u,l){alert('ОШИБКА СТР '+l+': '+m)};
 function lp(){upd();drw();requestAnimationFrame(lp)}initWorld(0);lp();
+if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js')}
 </script>
 </body>
 </html>
