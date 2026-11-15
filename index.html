@@ -6,6 +6,7 @@
 <title>Жгутиконосцы v3.3</title>
 <style>
 *{box-sizing:border-box;user-select:none;-webkit-user-select:none}
+input,textarea{user-select:text !important;-webkit-user-select:text !important;touch-action:manipulation}
 body{margin:0;overflow:hidden;background:#02080e;font-family:'Segoe UI',sans-serif;color:#fff}
 #g{position:fixed;inset:0;width:100vw;height:100vh;display:block;z-index:1;touch-action:none}
 button,.badge,.ubtn,.bbtn,.gitem,.copt,.qopt,#homeBtn,#zBtn,#mitBtn,#shkBtn,#abBtn,#dodgeBtn{touch-action:manipulation;cursor:pointer}
@@ -143,7 +144,7 @@ textarea.svtxt{width:100%;height:78px;background:rgba(0,0,0,.5);color:#00f5d4;bo
 <h3 style="margin:0 0 6px;color:#00f5d4;font-size:16px">💬 ОБЩИЙ ЧАТ ИГРОКОВ</h3>
 <div id="chatList" style="height:48vh;overflow-y:auto;text-align:left;background:rgba(0,0,0,.45);border:1px solid rgba(126,249,255,.25);border-radius:10px;padding:7px;margin-bottom:6px;font-size:11px;line-height:1.35"></div>
 <div style="display:flex;gap:4px">
-<input id="chatInp" type="text" maxlength="120" placeholder="Написать сообщение..." onkeydown="if(event.key==='Enter')sendChatMsg()" style="flex:1;padding:8px;border-radius:9px;border:1px solid #7ef9ff;background:rgba(0,0,0,.6);color:#fff;font-size:12px;user-select:text;-webkit-user-select:text">
+<textarea id="chatInp" rows="1" maxlength="120" placeholder="Написать сообщение..." onkeydown="if(event.key==='Enter'){event.preventDefault();sendChatMsg()}" style="flex:1;height:36px;padding:8px;border-radius:9px;border:1px solid #7ef9ff;background:rgba(0,0,0,.6);color:#fff;font-size:13px;resize:none;font-family:inherit;user-select:text;-webkit-user-select:text"></textarea>
 <button class="mbtn" style="width:auto;padding:8px 14px;font-size:13px" onclick="sendChatMsg()">➤</button>
 </div>
 <button class="mbtn sbtn" onclick="closeChat()">ЗАКРЫТЬ</button>
@@ -623,7 +624,7 @@ let loc=[];try{loc=JSON.parse(localStorage.getItem('fl_lb_cache')||'[]')}catch(e
 renderLbList(loc,'⏳ Загрузка рейтинга...');syncLeaderboard(1);
 }
 
-const CHAT_URL='https://zhgutik-game-default-rtdb.firebaseio.com/';
+const CHAT_URL='https://zhgutik-game-default-rtdb.firebaseio.com/'+'/chat.json';
 let chatTimer=null,lastChatSend=0;
 
 function openChat(){
@@ -632,6 +633,10 @@ document.getElementById('chatModal').style.display='flex';
 loadChat(1);
 clearInterval(chatTimer);
 chatTimer=setInterval(()=>loadChat(0),1500);
+setTimeout(()=>{
+  let el=document.getElementById('chatInp');
+  if(el){el.value=' ';el.focus();el.value='';}
+},100);
 }
 
 function closeChat(){
@@ -644,8 +649,9 @@ async function loadChat(scrollDown=0){
 let box=document.getElementById('chatList');
 try{
 let r=await fetch(CHAT_URL);
-let data=r.ok?await r.json():{};
-let msgs=data?Object.values(data).filter(m=>m&&m.n&&m.t):[];
+if(!r.ok)throw new Error('HTTP '+r.status);
+let data=await r.json();
+let msgs=data?Object.values(data).filter(m=>m&&m.n&&m.t).slice(-35):[];
 if(msgs.length===0){box.innerHTML='<div style="color:#888;text-align:center;margin-top:20px">Сообщений пока нет. Напиши первым!</div>';return}
 let html='';
 msgs.forEach(m=>{
@@ -676,14 +682,15 @@ if(Date.now()-lastChatSend<2000){showNot('⏳ Не так быстро! Подо
 lastChatSend=Date.now();
 inp.value='';
 try{
-await fetch(CHAT_URL,{
+let res=await fetch(CHAT_URL,{
 method:'POST',
 headers:{'Content-Type':'application/json'},
 body:JSON.stringify({uid:save.uid,n:save.nick,b:save.best,t:txt.slice(0,120),ts:Date.now()})
 });
+if(!res.ok)throw new Error('HTTP '+res.status);
 snd('eat');
 loadChat(1);
-}catch(e){showNot('❌ Не удалось отправить сообщение','#d90429',140,0)}
+}catch(e){showNot('❌ Ошибка отправки: '+e.message,'#d90429',160,0)}
 }
 const DAILY_POOL=[
 {tp:'eat',n:'Поглотить 15 клеток',trg:15,xp:50},
