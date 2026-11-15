@@ -84,6 +84,7 @@ textarea.svtxt{width:100%;height:78px;background:rgba(0,0,0,.5);color:#00f5d4;bo
 <span class="badge" style="color:#a8ff78" onclick="openSaveModal()">💾 Сейв</span>
 <span class="badge" style="color:#ffb3c1;border:1px solid #ffb3c1" onclick="document.getElementById('newsModal').style.display='flex';snd('click')">📜 Обновления</span>
 <span class="badge" style="color:#00f5d4;border:1px solid #00f5d4" onclick="openChat()">💬 Чат</span>
+<span class="badge" id="admBtn" style="display:none;color:#ffd166;border:1px solid #ffd166;background:rgba(255,209,102,.18)" onclick="openAdminPanel()">👑 Админ</span>
 </div>
 <div class="modes">
 <button class="mdbtn act" id="md0" onclick="setMode(0)">🧬 Эволюция</button>
@@ -148,6 +149,22 @@ textarea.svtxt{width:100%;height:78px;background:rgba(0,0,0,.5);color:#00f5d4;bo
 <button class="mbtn" style="width:auto;padding:8px 14px;font-size:13px" onclick="sendChatMsg()">➤</button>
 </div>
 <button class="mbtn sbtn" onclick="closeChat()">ЗАКРЫТЬ</button>
+</div></div>
+<div id="adminModal" style="display:none;position:fixed;inset:0;z-index:39;background:rgba(2,10,18,.96);align-items:center;justify-content:center;padding:8px">
+<div class="panel glass" style="border-color:#ffd166">
+<h3 style="margin:0 0 4px;color:#ffd166;font-size:16px">👑 ПАНЕЛЬ АДМИНИСТРАТОРА</h3>
+<div style="font-size:10px;color:#7ef9ff;margin-bottom:6px">Облачные аккаунты игроков в Firebase:</div>
+<div id="admList" style="max-height:54vh;overflow-y:auto;text-align:left;margin-bottom:6px"></div>
+<button class="mbtn" style="font-size:12px;padding:6px;margin-bottom:4px" onclick="openAdminPanel()">🔄 ОБНОВИТЬ СПИСОК</button>
+<button class="mbtn sbtn" onclick="document.getElementById('adminModal').style.display='none'">ЗАКРЫТЬ</button>
+</div></div>
+<div id="adminModal" style="display:none;position:fixed;inset:0;z-index:39;background:rgba(2,10,18,.96);align-items:center;justify-content:center;padding:8px">
+<div class="panel glass" style="border-color:#ffd166">
+<h3 style="margin:0 0 4px;color:#ffd166;font-size:16px">👑 ПАНЕЛЬ АДМИНИСТРАТОРА</h3>
+<div style="font-size:10px;color:#7ef9ff;margin-bottom:6px">Облачные аккаунты игроков в Firebase:</div>
+<div id="admList" style="max-height:54vh;overflow-y:auto;text-align:left;margin-bottom:6px"></div>
+<button class="mbtn" style="font-size:12px;padding:6px;margin-bottom:4px" onclick="openAdminPanel()">🔄 ОБНОВИТЬ СПИСОК</button>
+<button class="mbtn sbtn" onclick="document.getElementById('adminModal').style.display='none'">ЗАКРЫТЬ</button>
 </div></div>
 <div id="bpModal" style="display:none;z-index:36"><div class="panel glass" style="border-color:#ff9f1c">
 <h3 style="margin:0 0 3px;color:#ffd166;font-size:15px">🧪 ЗАХВАТ ЛАБОРАТОРИИ</h3>
@@ -330,7 +347,7 @@ const BOOSTERS=[
 {id:'arsenal',n:'🔫 Снайперка',c:70},{id:'alc',n:'🔥 Спирт +50%',c:55},
 {id:'patriot',n:'🇷🇺 Анти-Кондра',c:65},{id:'boots',n:'👟 Сапоги +30%',c:40},
 {id:'dna2',n:'🧬 x2 ДНК',c:80},{id:'revive',n:'❤️ 2-й Шанс',c:100},
-{id:'mag4',n:'🧲 Магнит x4',c:35},{id:'berserk',n:'💀 Берсерк x3',c:90}
+{id:'mag4',n:'🧲 Магнит x1.5',c:35},{id:'berserk',n:'💀 Берсерк x3',c:90}
 ];
 const ABILITIES=[
 {id:'ab1',ic:'🛡️',n:'Циста-панцирь',tp:'act',cd:600,d:'[Клетка/Актив] Неуязвимость на 4/5/6с (без движения).'},
@@ -551,10 +568,30 @@ let key=cleanKey(save.nick);
 let chk=await fetch(CLOUD_URL+'/'+key+'.json');
 let old=chk.ok?await chk.json():null;
 if(old&&old.pin&&old.pin!==save.pin)return;
-await fetch(CLOUD_URL+'/'+key+'.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({pin:save.pin,data:save,t:Date.now()})});
+let nowT=Date.now();save.lastSync=nowT;localStorage.setItem('fl_save12',JSON.stringify(save));
+await fetch(CLOUD_URL+'/'+key+'.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({pin:save.pin,data:save,t:nowT})});
 }catch(e){}
 },1500);
 }
+
+async function pullCloudOnStart(){
+if(!save.nick||!save.pin||save.pin.length<3)return;
+try{
+let key=cleanKey(save.nick);
+let res=await fetch(CLOUD_URL+'/'+key+'.json');
+let obj=res.ok?await res.json():null;
+if(obj&&obj.pin===save.pin&&obj.data){
+let locT=save.lastSync||0,srvT=obj.t||0;
+if(srvT>locT){
+save={...save,...obj.data,pin:save.pin,lastSync:srvT};
+localStorage.setItem('fl_save12',JSON.stringify(save));
+renderMenu();
+showNot('🎁 ПОЛУЧЕНЫ ДАННЫЕ ИЗ ОБЛАКА!','#00f5d4',200,0);
+}
+}
+}catch(e){}
+}
+pullCloudOnStart();
 
 async function cloudLoad(){
 let nk=document.getElementById('clNick').value.trim(),pin=document.getElementById('clPin').value.trim();
@@ -645,27 +682,31 @@ document.getElementById('chatModal').style.display='none';
 clearInterval(chatTimer);
 }
 
+const MUTE_URL='https://zhgutik-game-default-rtdb.firebaseio.com/'+'/mutes';
+function isAdmin(){return save.nick.toLowerCase()==='dimasysya'&&save.pin&&save.pin.length>=3}
+
 async function loadChat(scrollDown=0){
 let box=document.getElementById('chatList');
 try{
 let r=await fetch(CHAT_URL);
 if(!r.ok)throw new Error('HTTP '+r.status);
 let data=await r.json();
-let msgs=data?Object.values(data).filter(m=>m&&m.n&&m.t).slice(-35):[];
-if(msgs.length===0){box.innerHTML='<div style="color:#888;text-align:center;margin-top:20px">Сообщений пока нет. Напиши первым!</div>';return}
-let html='';
-msgs.forEach(m=>{
+let entries=data?Object.entries(data).filter(e=>e&&e[1]&&e[1].n&&e[1].t).slice(-35):[];
+if(entries.length===0){box.innerHTML='<div style="color:#888;text-align:center;margin-top:20px">Сообщений пока нет. Напиши первым!</div>';return}
+let html='',adm=isAdmin();
+entries.forEach(([msgId,m])=>{
 let isMe=m.uid===save.uid;
 let isDev=(m.n.toLowerCase()==='dimasysya');
 let tm=new Date(m.ts||Date.now()).toTimeString().slice(0,5);
 let safeTxt=String(m.t).replace(/</g,'&lt;').replace(/>/g,'&gt;');
 let safeNick=String(m.n).replace(/</g,'&lt;').replace(/>/g,'&gt;');
+let admTools=(adm&&!isMe)?(' <button class="dfbtn" style="padding:1px 4px;border-color:#ff4d6d;color:#ff4d6d" onclick="delChatMsg(\''+msgId+'\')">🗑️</button> <button class="dfbtn" style="padding:1px 4px;border-color:#ff9f1c;color:#ff9f1c" onclick="muteUser(\''+m.uid+'\',\''+safeNick+'\')">🔇</button>'):'';
 html+='<div style="margin-bottom:6px;padding:4px 6px;border-radius:7px;background:'+(isMe?'rgba(0,245,212,.12)':'rgba(255,255,255,.04)')+'">'+
 '<span style="color:#64748b;font-size:9px">['+tm+']</span> '+
-(isDev?'<span style="background:#ff007f;color:#fff;padding:1px 4px;border-radius:4px;font-size:9px;font-weight:bold">АВТОР</span> ':'')+
+(isDev?'<span style="background:#7f4f24;color:#fff;padding:1px 5px;border-radius:4px;font-size:9px;font-weight:bold;border:1px solid #b08968">Мопсик</span> ':'')+
 '<b style="color:'+(isDev?'#ffd166':(isMe?'#00f5d4':'#7ef9ff'))+'">'+safeNick+'</b> '+
 '<span style="color:#ffd166;font-size:9px">(👑'+(m.b||0)+')</span>: '+
-'<span style="color:#f1f5f9">'+safeTxt+'</span></div>';
+'<span style="color:#f1f5f9">'+safeTxt+'</span>'+admTools+'</div>';
 });
 let atBottom=(box.scrollHeight-box.scrollTop-box.clientHeight)<50;
 box.innerHTML=html;
@@ -682,15 +723,96 @@ if(Date.now()-lastChatSend<2000){showNot('⏳ Не так быстро! Подо
 lastChatSend=Date.now();
 inp.value='';
 try{
+let mr=await fetch(MUTE_URL+'/'+save.uid+'.json');
+let mData=mr.ok?await mr.json():null;
+if(mData&&mData.until>Date.now()){
+let sec=Math.ceil((mData.until-Date.now())/1000);
+showNot('🔇 Вы в муте ещё '+sec+' сек.!','#d90429',180,0);return;
+}
 let res=await fetch(CHAT_URL,{
 method:'POST',
 headers:{'Content-Type':'application/json'},
 body:JSON.stringify({uid:save.uid,n:save.nick,b:save.best,t:txt.slice(0,120),ts:Date.now()})
 });
 if(!res.ok)throw new Error('HTTP '+res.status);
-snd('eat');
-loadChat(1);
+snd('eat');loadChat(1);
 }catch(e){showNot('❌ Ошибка отправки: '+e.message,'#d90429',160,0)}
+}
+
+async function delChatMsg(id){
+if(!isAdmin())return;
+await fetch('https://firebaseio.com'+'/chat/'+id+'.json',{method:'DELETE'});
+snd('snap');loadChat(0);
+}
+
+async function muteUser(uid,nk){
+if(!isAdmin())return;
+let mins=prompt('На сколько минут замутить игрока '+nk+'? (0 = снять мут)','10');
+if(mins===null)return;
+let m=parseInt(mins)||0;
+await fetch(MUTE_URL+'/'+uid+'.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({until:Date.now()+m*60000,n:nk})});
+snd('bell');showNot(m>0?('🔇 '+nk+' замучен на '+m+' мин.'):('✅ Мут снят с '+nk),'#ffd166',180,0);
+}
+async function openAdminPanel(){
+if(!isAdmin())return;
+snd('click');
+let box=document.getElementById('admList');
+box.innerHTML='<div style="text-align:center;color:#7ef9ff">⏳ Загрузка аккаунтов...</div>';
+document.getElementById('adminModal').style.display='flex';
+try{
+let r=await fetch(CLOUD_URL+'.json');
+let all=r.ok?await r.json():{};
+let keys=all?Object.keys(all):[];
+if(keys.length===0){box.innerHTML='<div style="color:#888">Облачных аккаунтов пока нет.</div>';return}
+box.innerHTML='';
+keys.forEach(k=>{
+let acc=all[k];if(!acc||!acc.data)return;
+let d=acc.data,div=document.createElement('div');
+div.className='aitem done';
+div.innerHTML='<b>👤 '+(d.nick||k)+'</b> <span style="color:#888;font-size:9px">(ПИН: '+acc.pin+')</span><br>'+
+'<span style="color:#ffd166">👑 '+d.best+' | 🧬 '+d.dna+' | 💎 '+(d.atp||0)+' | ⚛️ '+(d.cores||0)+'</span><br>'+
+'<div style="display:flex;gap:4px;margin-top:4px">'+
+'<button class="dfbtn act" onclick="admLogin(\''+k+'\')">🕵️ Войти</button>'+
+'<button class="dfbtn" style="border-color:#00f5d4;color:#00f5d4" onclick="admEdit(\''+k+'\')">✏️ Изменить статы / Башни</button>'+
+'</div>';
+box.appendChild(div);
+});
+}catch(e){box.innerHTML='<div style="color:#ff4d6d">Ошибка: '+e.message+'</div>'}
+}
+
+async function admLogin(key){
+if(!isAdmin())return;
+let r=await fetch(CLOUD_URL+'/'+key+'.json');
+let acc=r.ok?await r.json():null;
+if(!acc||!acc.data)return;
+save={...save,...acc.data,pin:acc.pin};
+localStorage.setItem('fl_save12',JSON.stringify(save));
+document.getElementById('adminModal').style.display='none';
+snd('evo');renderMenu();
+showNot('🕵️ Вы вошли в аккаунт: '+save.nick,'#ffd166',220,0);
+}
+
+async function admEdit(key){
+if(!isAdmin())return;
+let r=await fetch(CLOUD_URL+'/'+key+'.json');
+let acc=r.ok?await r.json():null;
+if(!acc||!acc.data)return;
+let d=acc.data;
+let nDna=prompt('ДНК для '+d.nick+':',d.dna);if(nDna===null)return;
+let nAtp=prompt('АТФ (TD) для '+d.nick+':',d.atp||0);if(nAtp===null)return;
+let nCor=prompt('Ядра ивента для '+d.nick+':',d.cores||0);if(nCor===null)return;
+let nBest=prompt('Рекорд очков для '+d.nick+':',d.best||0);if(nBest===null)return;
+let twInp=prompt('Выдать башню TD по номеру (0-20) или напиши ALL чтобы открыть все (оставь пустым чтобы не менять):\n15-Бебякин, 16-Ольга Н., 17-Чума, 18-Лаба, 19-Евгения П., 20-Елена В.','');
+d.dna=parseInt(nDna)||0;d.atp=parseInt(nAtp)||0;d.cores=parseInt(nCor)||0;d.best=parseInt(nBest)||0;
+if(twInp&&twInp.trim()!==''){
+  if(!Array.isArray(d.tdOwn)||d.tdOwn.length!==21)d.tdOwn=DEF_TD_OWN.slice();
+  if(twInp.trim().toUpperCase()==='ALL'){d.tdOwn=d.tdOwn.map(()=>1)}
+  else{let tid=parseInt(twInp);if(tid>=0&&tid<=20)d.tdOwn[tid]=1}
+}
+await fetch(CLOUD_URL+'/'+key+'.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({pin:acc.pin,data:d,t:Date.now()})});
+if(cleanKey(save.nick)===key){save={...save,...d};sv();renderMenu()}
+snd('evo');openAdminPanel();
+showNot('✅ Данные игрока '+d.nick+' обновлены!','#00f5d4',200,0);
 }
 const DAILY_POOL=[
 {tp:'eat',n:'Поглотить 15 клеток',trg:15,xp:50},
@@ -903,6 +1025,7 @@ let eqObj=ABILITIES.find(v=>v.id===save.eqAb);document.getElementById('eqAbName'
 let pasObj=ABILITIES.find(v=>v.id===save.eqPas);document.getElementById('eqPasName').innerText=save.slot2?(pasObj?(pasObj.ic+'⭐'+abLv(pasObj.id)):'Пусто'):'🔒';
 let ownCnt=save.ownSk.filter(Boolean).length;if(ownCnt>=4)unlock('a47');if(ownCnt>=8)unlock('a48');
 if(save.spd>=5||save.eng>=5||save.mag>=5)unlock('a49');if(save.spd>=5&&save.eng>=5&&save.mag>=5)unlock('a50');
+let abm=document.getElementById('admBtn');if(abm)abm.style.display=isAdmin()?'inline-block':'none';
 }
 renderMenu();
 function rs(){w=c.width=innerWidth;h=c.height=innerHeight}
@@ -1468,7 +1591,7 @@ if(headStartT<=0&&mode===0&&!spaceMode&&++pipetteT>=2400){pipetteT=0;pipette={x:
 if(pipette){pipette.l--;if(Math.abs(p.x-pipette.x)<pipette.w/2&&Math.abs(p.y-pipette.y)<pipette.h/2){p.x+=pipette.vx;unlock('a57')}for(let e of en)if(Math.abs(e.x-pipette.x)<pipette.w/2&&Math.abs(e.y-pipette.y)<pipette.h/2)e.x+=pipette.vx;if(pipette.l<=0)pipette=null}
 if(headStartT<=0&&mode===0&&!spaceMode&&sc>=8000&&!dirNpc.act){dirNpc.act=1;dirNpc.x=p.x+500;dirNpc.y=p.y-400;showNot('👔 НА КАРТУ ВЫШЕЛ ДИРЕКТОР ШКОЛЫ!','#4cc9f0',220,0)}
 if(headStartT<=0&&dirNpc.act){let da=Math.atan2(p.y-dirNpc.y,p.x-dirNpc.x);dirNpc.x+=Math.cos(da)*3.1;dirNpc.y+=Math.sin(da)*3.1;if(++dirNpc.cd>=260){dirNpc.cd=0;dirNpc.stamps.push({x:dirNpc.x,y:dirNpc.y,l:900})}for(let i=dirNpc.stamps.length-1;i>=0;i--){let st=dirNpc.stamps.at(i);st.l--;if(Math.hypot(p.x-st.x,p.y-st.y)<p.r+22){dirNpc.stamps.splice(i,1);startOrder();return}if(st.l<=0)dirNpc.stamps.splice(i,1)}}
-let magMult=(actBst.mag4?4:1)*(abType==='ab5'?(2.5+abLv('ab5')):1);
+let magMult=(actBst.mag4?1.5:1)*(abType==='ab5'?(2.5+abLv('ab5')):1);
 for(let i=pizzas.length-1;i>=0;i--){let pz=pizzas.at(i),dp=Math.hypot(p.x-pz.x,p.y-pz.y);if(dp<200*magMult){pz.x+=(p.x-pz.x)*.12;pz.y+=(p.y-pz.y)*.12}if(dp<p.r+18){pizzas.splice(i,1);if(mode===5){pizzaGot++;addScore(300);snd('gulp');stgE.innerText='Пицца: '+pizzaGot+'/5 | До звонка: '+Math.ceil(canteenT/60)+'с';pop(p.x,p.y-25,'🍕 ПИЦЦА '+pizzaGot+'/5!','#ffd166')}else if((kondra.act||putin.act)&&!actBst.patriot){p.slow=200;snd('snap');pop(p.x,p.y-25,'ПИЦЦА ЗАПРЕЩЕНА! 2 БАЛЛА!','#ff4d6d')}else{addScore(150);p.en=p.maxEn;snd('gulp');save.st.pizzas++;addQuestProg('pizza',1);if(save.st.pizzas>=10)unlock('a36');sv();pop(p.x,p.y-25,'ВКУСНАЯ ПИЦЦА +150','#ffd166')}}}
 if(headStartT<=0&&mode===5){canteenT--;stgE.innerText='Пицца: '+pizzaGot+'/5 | До звонка: '+Math.max(0,Math.ceil(canteenT/60))+'с';if(canteenT<=0){killPlayer('🔔 Прозвенел звонок! Вы не успели сбежать из столовой!');return}hiddenInPuree=purees.some(pr=>Math.hypot(p.x-pr.x,p.y-pr.y)<pr.r)?1:0;if(hiddenInPuree)unlock('a74');cook.cd++;let ta=hiddenInPuree?(cook.a+.025):Math.atan2(p.y-cook.y,p.x-cook.x),csp=hiddenInPuree?2.4:4.1,offsets=Array.of(0,.5,-.5,1.05,-1.05,1.57,-1.57,2.3,-2.3,3.14),moved=0;for(let off of offsets){let ang=ta+off,nx=cook.x+Math.cos(ang)*csp,ny=cook.y+Math.sin(ang)*csp;if(nx>cook.r&&nx<W-cook.r&&ny>cook.r&&ny<W-cook.r&&!hitWall(nx,ny,cook.r)){cook.x=nx;cook.y=ny;cook.a=ang;moved=1;break}}if(!moved){cook.x=Math.max(cook.r,Math.min(W-cook.r,cook.x+Math.cos(ta)*csp));cook.y=Math.max(cook.r,Math.min(W-cook.r,cook.y+Math.sin(ta)*csp))}if(!hiddenInPuree){if(cook.cd%90===0){bul.push({own:0,x:cook.x,y:cook.y,vx:Math.cos(cook.a)*9.5,vy:Math.sin(cook.a)*9.5,r:10,dmg:1,col:'#d90429',l:85});unlock('a77')}if(Math.hypot(p.x-cook.x,p.y-cook.y)<p.r+cook.r){killPlayer('👩‍🍳 Повариха поймала вас половником!');return}}if(pizzaGot>=5&&Math.hypot(p.x-vent.x,p.y-vent.y)<p.r+vent.r){addScore(2500);let dg=180*(actBst.dna2?2:1);runDna+=dg;save.dna+=dg;save.st.canteen=(save.st.canteen||0)+1;if(save.st.canteen>=3)unlock('a79');sv();unlock('a73');unlock('a75');killPlayer('🏆 ПОБЕГ ИЗ СТОЛОВОЙ УДАЛСЯ! (+2500, +'+dg+'🧬)');return}}
 if(headStartT<=0&&tardigrade.act){tardigrade.cd++;tardigrade.rage=Math.min(2.6,tardigrade.rage+.00035);tardigrade.a=Math.atan2(p.y-tardigrade.y,p.x-tardigrade.x);let tsp=(3.3+tardigrade.rage)*(tardigrade.cd%260<35?2.2:1);tardigrade.x+=Math.cos(tardigrade.a)*tsp;tardigrade.y+=Math.sin(tardigrade.a)*tsp;if(tardigrade.cd%75===0)for(let k=-2;k<=2;k++){let a=tardigrade.a+k*.25;bul.push({own:0,x:tardigrade.x,y:tardigrade.y,vx:Math.cos(a)*(10+tardigrade.rage),vy:Math.sin(a)*(10+tardigrade.rage),r:8,dmg:1,col:'#7ef9ff',l:85})}if(tardigrade.cd%190===0)for(let k=0;k<12;k++){let a=k*(6.283/12);bul.push({own:0,x:tardigrade.x,y:tardigrade.y,vx:Math.cos(a)*8.5,vy:Math.sin(a)*8.5,r:7,dmg:1,col:'#e0aaff',l:95})}if(tardigrade.cd%310===0&&Math.hypot(p.x-tardigrade.x,p.y-tardigrade.y)<900){p.x+=(tardigrade.x-p.x)*.25;p.y+=(tardigrade.y-p.y)*.25;pop(p.x,p.y-25,'🌀 КОСМО-ВОРОНКА ТИХОХОДКИ!','#7ef9ff')}if(Math.hypot(p.x-tardigrade.x,p.y-tardigrade.y)<p.r+tardigrade.r){killPlayer('🌌 Вас поглотила Мега-Тихоходка!');return}}
