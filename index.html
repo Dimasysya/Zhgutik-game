@@ -82,6 +82,7 @@ textarea.svtxt{width:100%;height:78px;background:rgba(0,0,0,.5);color:#00f5d4;bo
 <span class="badge" style="color:#ff9f1c" onclick="openLeaderboard()">🌐 Топ</span>
 <span class="badge" style="color:#a8ff78" onclick="openSaveModal()">💾 Сейв</span>
 <span class="badge" style="color:#ffb3c1;border:1px solid #ffb3c1" onclick="document.getElementById('newsModal').style.display='flex';snd('click')">📜 Обновления</span>
+<span class="badge" style="color:#00f5d4;border:1px solid #00f5d4" onclick="openChat()">💬 Чат</span>
 </div>
 <div class="modes">
 <button class="mdbtn act" id="md0" onclick="setMode(0)">🧬 Эволюция</button>
@@ -136,6 +137,16 @@ textarea.svtxt{width:100%;height:78px;background:rgba(0,0,0,.5);color:#00f5d4;bo
 • Способность «Рюкзак-инкубатор» и экспорт/импорт сохранений.</div>
 </div>
 <button class="mbtn sbtn" onclick="document.getElementById('newsModal').style.display='none';snd('click')">ЗАКРЫТЬ</button>
+</div></div>
+<div id="chatModal" style="display:none;position:fixed;inset:0;z-index:38;background:rgba(2,10,18,.95);align-items:center;justify-content:center;padding:8px">
+<div class="panel glass" style="border-color:#00f5d4">
+<h3 style="margin:0 0 6px;color:#00f5d4;font-size:16px">💬 ОБЩИЙ ЧАТ ИГРОКОВ</h3>
+<div id="chatList" style="height:48vh;overflow-y:auto;text-align:left;background:rgba(0,0,0,.45);border:1px solid rgba(126,249,255,.25);border-radius:10px;padding:7px;margin-bottom:6px;font-size:11px;line-height:1.35"></div>
+<div style="display:flex;gap:4px">
+<input id="chatInp" type="text" maxlength="120" placeholder="Написать сообщение..." onkeydown="if(event.key==='Enter')sendChatMsg()" style="flex:1;padding:8px;border-radius:9px;border:1px solid #7ef9ff;background:rgba(0,0,0,.6);color:#fff;font-size:12px;user-select:text;-webkit-user-select:text">
+<button class="mbtn" style="width:auto;padding:8px 14px;font-size:13px" onclick="sendChatMsg()">➤</button>
+</div>
+<button class="mbtn sbtn" onclick="closeChat()">ЗАКРЫТЬ</button>
 </div></div>
 <div id="bpModal" style="display:none;z-index:36"><div class="panel glass" style="border-color:#ff9f1c">
 <h3 style="margin:0 0 3px;color:#ffd166;font-size:15px">🧪 ЗАХВАТ ЛАБОРАТОРИИ</h3>
@@ -610,6 +621,69 @@ function openLeaderboard(){
 snd('click');document.getElementById('lbModal').style.display='flex';
 let loc=[];try{loc=JSON.parse(localStorage.getItem('fl_lb_cache')||'[]')}catch(e){}
 renderLbList(loc,'⏳ Загрузка рейтинга...');syncLeaderboard(1);
+}
+
+const CHAT_URL='https://zhgutik-game-default-rtdb.firebaseio.com/';
+let chatTimer=null,lastChatSend=0;
+
+function openChat(){
+snd('click');
+document.getElementById('chatModal').style.display='flex';
+loadChat(1);
+clearInterval(chatTimer);
+chatTimer=setInterval(()=>loadChat(0),1500);
+}
+
+function closeChat(){
+snd('click');
+document.getElementById('chatModal').style.display='none';
+clearInterval(chatTimer);
+}
+
+async function loadChat(scrollDown=0){
+let box=document.getElementById('chatList');
+try{
+let r=await fetch(CHAT_URL+'?orderBy="$key"&limitToLast=35');
+let data=r.ok?await r.json():{};
+let msgs=data?Object.values(data).filter(m=>m&&m.n&&m.t):[];
+if(msgs.length===0){box.innerHTML='<div style="color:#888;text-align:center;margin-top:20px">Сообщений пока нет. Напиши первым!</div>';return}
+let html='';
+msgs.forEach(m=>{
+let isMe=m.uid===save.uid;
+let isDev=(m.n.toLowerCase()==='dimasysya');
+let tm=new Date(m.ts||Date.now()).toTimeString().slice(0,5);
+let safeTxt=String(m.t).replace(/</g,'&lt;').replace(/>/g,'&gt;');
+let safeNick=String(m.n).replace(/</g,'&lt;').replace(/>/g,'&gt;');
+html+='<div style="margin-bottom:6px;padding:4px 6px;border-radius:7px;background:'+(isMe?'rgba(0,245,212,.12)':'rgba(255,255,255,.04)')+'">'+
+'<span style="color:#64748b;font-size:9px">['+tm+']</span> '+
+(isDev?'<span style="background:#ff007f;color:#fff;padding:1px 4px;border-radius:4px;font-size:9px;font-weight:bold">АВТОР</span> ':'')+
+'<b style="color:'+(isDev?'#ffd166':(isMe?'#00f5d4':'#7ef9ff'))+'">'+safeNick+'</b> '+
+'<span style="color:#ffd166;font-size:9px">(👑'+(m.b||0)+')</span>: '+
+'<span style="color:#f1f5f9">'+safeTxt+'</span></div>';
+});
+let atBottom=(box.scrollHeight-box.scrollTop-box.clientHeight)<50;
+box.innerHTML=html;
+if(scrollDown||atBottom)box.scrollTop=box.scrollHeight;
+}catch(e){
+if(scrollDown)box.innerHTML='<div style="color:#ff4d6d">Ошибка загрузки чата: '+e.message+'</div>';
+}
+}
+
+async function sendChatMsg(){
+let inp=document.getElementById('chatInp'),txt=inp.value.trim();
+if(!txt)return;
+if(Date.now()-lastChatSend<2000){showNot('⏳ Не так быстро! Подождите 2 сек.','#ff9f1c',100,0);return}
+lastChatSend=Date.now();
+inp.value='';
+try{
+await fetch(CHAT_URL,{
+method:'POST',
+headers:{'Content-Type':'application/json'},
+body:JSON.stringify({uid:save.uid,n:save.nick,b:save.best,t:txt.slice(0,120),ts:Date.now()})
+});
+snd('eat');
+loadChat(1);
+}catch(e){showNot('❌ Не удалось отправить сообщение','#d90429',140,0)}
 }
 const DAILY_POOL=[
 {tp:'eat',n:'Поглотить 15 клеток',trg:15,xp:50},
