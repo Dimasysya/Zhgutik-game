@@ -1091,7 +1091,7 @@ td.sel=0;td.zm=.72;document.getElementById('tdZmBtn').innerText='🔍 0.7x';docu
 updTdUi();showNot('🛡️ РАССТАВЬТЕ БАШНИ И НАЖМИТЕ «НАЧАТЬ БОЙ»!','#00f5d4',240,0);
 }
 function togTdZm(){snd('click');td.zm=td.zm===.72?.45:(td.zm===.45?1:.72);document.getElementById('tdZmBtn').innerText='🔍 '+td.zm+'x';let sz=TD_MAPS.at(td.map).sz;td.camX=Math.max(0,Math.min(Math.max(0,sz-w/td.zm),td.camX));td.camY=Math.max(0,Math.min(Math.max(0,sz-h/td.zm),td.camY))}
-function togTdSpd(){snd('click');td.spd=td.spd===1?2:1;document.getElementById('tdSpdBtn').innerText='⏩ x'+td.spd}
+function togTdSpd(){snd('click');td.spd=td.spd===1?2:(td.spd===2?3:1);document.getElementById('tdSpdBtn').innerText='⏩ x'+td.spd}
 function forceTdWave(){if(mini!==6||!td.started||td.spLeft>0||td.wv>=td.maxWv)return;snd('bell');td.breakT=0;td.gold+=18+td.wv*2;td.wv++;addQuestProg('tdWave',1);startTdWave()}
 function updTdUi(){
 document.getElementById('tdWv').innerText=td.wv;document.getElementById('tdHp').innerText=td.hp;document.getElementById('tdGld').innerText=td.gold;
