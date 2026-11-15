@@ -1,24 +1,24 @@
 {
   "name": "Жгутиконосцы 3.2",
   "short_name": "Жгутиконосцы",
-  "start_url": "./index.html",
-  "scope": "./",
+  "start_url": "/Zhgutik-game/index.html",
+  "scope": "/Zhgutik-game/",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#02080e",
   "theme_color": "#02080e",
   "icons": [
     {
-      "src": "icon.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "icon.png",
+      "src": "/Zhgutik-game/icon.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "/Zhgutik-game/icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ]
 }
