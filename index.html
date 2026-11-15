@@ -511,7 +511,7 @@ showNot('✅ Сохранение успешно загружено!','#00b4d8',
 }catch(e){showNot('❌ Неверный код сохранения!','#d90429',180,0)}
 }
 
-const LB_BASE='https://firebaseio.com';
+const LB_BASE='https://zhgutik-game-default-rtdb.firebaseio.com/';
 async function syncLeaderboard(forceShow=0){
 let me={uid:save.uid,nick:save.nick,best:save.best,dna:save.dna,ach:Object.keys(save.ach).length,wv:save.tdBestWv||0,t:Date.now()};
 let loc=[];try{loc=JSON.parse(localStorage.getItem('fl_lb_cache')||'[]')}catch(e){}
