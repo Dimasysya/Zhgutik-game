@@ -586,11 +586,11 @@ clearTimeout(cloudTimer);
 cloudTimer=setTimeout(async()=>{
 try{
 let key=cleanKey(save.nick);
-let chk=await fetch(CLOUD_URL+'/'+key+'.json');
+let chk=await fetch(CLOUD_URL+'users/'+key+'.json');
 let old=chk.ok?await chk.json():null;
 if(old&&old.pin&&old.pin!==save.pin)return;
 let nowT=Date.now();save.lastSync=nowT;localStorage.setItem('fl_save12',JSON.stringify(save));
-await fetch(CLOUD_URL+'/'+key+'.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({pin:save.pin,data:save,t:nowT})});
+await fetch(CLOUD_URL+'users/'+key+'.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({pin:save.pin,data:save,t:nowT})});
 }catch(e){}
 },1500);
 }
@@ -599,7 +599,7 @@ async function pullCloudOnStart(){
 if(!save.nick||!save.pin||save.pin.length<3)return;
 try{
 let key=cleanKey(save.nick);
-let res=await fetch(CLOUD_URL+'/'+key+'.json');
+let res=await fetch(CLOUD_URL+'users/'+key+'.json');
 let obj=res.ok?await res.json():null;
 if(obj&&obj.pin===save.pin&&obj.data){
 let locT=save.lastSync||0,srvT=obj.t||0;
@@ -620,7 +620,7 @@ if(!nk||!pin){showNot('❌ Введите ник и ПИН-код для заг�
 let key=cleanKey(nk);
 try{
 showNot('⏳ Поиск аккаунта в облаке...','#00b4d8',120,0);
-let res=await fetch(CLOUD_URL+'/'+key+'.json');
+let res=await fetch(CLOUD_URL+'users/'+key+'.json');
 let obj=res.ok?await res.json():null;
 if(!obj||!obj.data){showNot('❌ Аккаунт с таким ником не найден!','#d90429',200,0);return}
 if(obj.pin!==pin){showNot('❌ Неверный ПИН-код!','#d90429',200,0);return}
@@ -799,9 +799,12 @@ box.innerHTML='<div style="text-align:center;color:#7ef9ff">⏳ Загрузка
 document.getElementById('adminModal').style.display='flex';
 try{
 await pingOnline();
-let r=await fetch(CLOUD_URL+'users.json');
-let all=r.ok?await r.json():{};
-let keys=all?Object.keys(all):[];
+let [r1,r2]=await Promise.all([fetch(CLOUD_URL+'users.json'),fetch(CLOUD_URL+'.json')]);
+let u1=(r1.ok?await r1.json():null)||{},u2=(r2.ok?await r2.json():null)||{};
+let all={};
+for(let k in u2)if(u2[k]&&u2[k].data&&u2[k].pin)all[k]=u2[k];
+for(let k in u1)if(u1[k]&&u1[k].data)all[k]=u1[k];
+let keys=Object.keys(all);
 if(keys.length===0){box.innerHTML='<div style="color:#888">Облачных аккаунтов пока нет.</div>';return}
 box.innerHTML='';
 keys.forEach(k=>{
@@ -821,7 +824,7 @@ box.appendChild(div);
 
 async function admLogin(key){
 if(!isAdmin())return;
-let r=await fetch(CLOUD_URL+'/'+key+'.json');
+let r=await fetch(CLOUD_URL+'users/'+key+'.json');
 let acc=r.ok?await r.json():null;
 if(!acc||!acc.data)return;
 save={...save,...acc.data,pin:acc.pin};
@@ -833,7 +836,7 @@ showNot('🕵️ Вы вошли в аккаунт: '+save.nick,'#ffd166',220,0)
 
 async function admEdit(key){
 if(!isAdmin())return;
-let r=await fetch(CLOUD_URL+'/'+key+'.json');
+let r=await fetch(CLOUD_URL+'users/'+key+'.json');
 let acc=r.ok?await r.json():null;
 if(!acc||!acc.data)return;
 let d=acc.data;
