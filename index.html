@@ -1411,37 +1411,49 @@ snd('click');document.getElementById('tdHubModal').style.display='none';
 document.getElementById('tdPvpModal').style.display='flex';
 document.getElementById('pvpLobbySt').innerText='🔍 Поиск соперника онлайн...';
 clearInterval(pvp.pollT);pvp.act=0;
+let myKey=save.uid+'_'+Math.floor(Math.random()*9000+1000);
+pvp.myQKey=myKey;
 try{
 let r=await fetch(PVP_URL+'/queue.json');
-let q=r.ok?await r.json():null;
-if(q&&q.uid&&q.uid!==save.uid&&Date.now()-q.t<15000){
-let rmId='rm_'+q.uid+'_'+save.uid+'_'+Date.now();
-await fetch(PVP_URL+'/rooms/'+rmId+'.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({p1:{uid:q.uid,nick:q.nick,hp:25},p2:{uid:save.uid,nick:save.nick,hp:25},t:Date.now()})});
-await fetch(PVP_URL+'/queue.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({uid:q.uid,nick:q.nick,room:rmId,t:Date.now()})});
-startPvpMatch(rmId,'p2',q.uid,q.nick);
+let qAll=(r.ok?await r.json():null)||{};
+let foundKey=null,foundObj=null;
+for(let k in qAll){
+if(qAll[k]&&Date.now()-qAll[k].t<15000){foundKey=k;foundObj=qAll[k];break}
+}
+if(foundKey&&foundObj){
+await fetch(PVP_URL+'/queue/'+foundKey+'.json',{method:'DELETE'});
+let rmId='rm_'+Date.now()+'_'+Math.floor(Math.random()*999);
+await fetch(PVP_URL+'/rooms/'+rmId+'.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({p1:{key:foundKey,uid:foundObj.uid,nick:foundObj.nick,hp:25},p2:{key:myKey,uid:save.uid,nick:save.nick,hp:25},t:Date.now()})});
+await fetch(PVP_URL+'/invites/'+foundKey+'.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({room:rmId,oppUid:save.uid,oppNick:save.nick,t:Date.now()})});
+startPvpMatch(rmId,'p2',foundObj.uid,foundObj.nick);
 }else{
-await fetch(PVP_URL+'/queue.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({uid:save.uid,nick:save.nick,room:'',t:Date.now()})});
+await fetch(PVP_URL+'/invites/'+myKey+'.json',{method:'DELETE'});
+await fetch(PVP_URL+'/queue/'+myKey+'.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({uid:save.uid,nick:save.nick,t:Date.now()})});
 document.getElementById('pvpLobbySt').innerText='⏳ Вы в очереди! Ожидание второго игрока...';
 pvp.pollT=setInterval(async()=>{
 try{
-let rq=await fetch(PVP_URL+'/queue.json');let d=rq.ok?await rq.json():null;
-if(d&&d.uid===save.uid&&d.room){
+let ri=await fetch(PVP_URL+'/invites/'+myKey+'.json');
+let inv=ri.ok?await ri.json():null;
+if(inv&&inv.room){
 clearInterval(pvp.pollT);
-let rr=await fetch(PVP_URL+'/rooms/'+d.room+'.json');let rm=rr.ok?await rr.json():null;
-await fetch(PVP_URL+'/queue.json',{method:'DELETE'});
-startPvpMatch(d.room,'p1',rm?.p2?.uid||'opp',rm?.p2?.nick||'Соперник');
-}else if(d&&d.uid===save.uid){
-await fetch(PVP_URL+'/queue.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({uid:save.uid,nick:save.nick,room:'',t:Date.now()})});
+await fetch(PVP_URL+'/invites/'+myKey+'.json',{method:'DELETE'});
+await fetch(PVP_URL+'/queue/'+myKey+'.json',{method:'DELETE'});
+startPvpMatch(inv.room,'p1',inv.oppUid||'opp',inv.oppNick||'Соперник');
+}else{
+await fetch(PVP_URL+'/queue/'+myKey+'/t.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(Date.now())});
 }
 }catch(e){}
-},1500);
+},1000);
 }
 }catch(e){document.getElementById('pvpLobbySt').innerText='❌ Ошибка сети: '+e.message}
 }
 async function cancelTdPvp(){
 snd('click');clearInterval(pvp.pollT);
 document.getElementById('tdPvpModal').style.display='none';
-try{let rq=await fetch(PVP_URL+'/queue.json');let d=rq.ok?await rq.json():null;if(d&&d.uid===save.uid)await fetch(PVP_URL+'/queue.json',{method:'DELETE'})}catch(e){}
+if(pvp.myQKey){
+fetch(PVP_URL+'/queue/'+pvp.myQKey+'.json',{method:'DELETE'}).catch(()=>{});
+fetch(PVP_URL+'/invites/'+pvp.myQKey+'.json',{method:'DELETE'}).catch(()=>{});
+}
 openTdHub();
 }
 function pushPvpEv(ev){
