@@ -2,13 +2,15 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
 <title>Жгутиконосцы v3.7</title>
 <style>
 *{box-sizing:border-box;user-select:none;-webkit-user-select:none}
 input,textarea{user-select:text !important;-webkit-user-select:text !important;touch-action:manipulation}
-body{margin:0;overflow:hidden;background:#02080e;font-family:'Segoe UI',sans-serif;color:#fff}
-#g{position:fixed;inset:0;width:100vw;height:100vh;display:block;z-index:1;touch-action:none}
+html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:#02080e;font-family:'Segoe UI',sans-serif;color:#fff}
+#g{position:fixed;inset:0;width:100vw;height:100dvh;display:block;z-index:1;touch-action:none}
 button,.badge,.ubtn,.bbtn,.gitem,.copt,.qopt,#homeBtn,#zBtn,#mitBtn,#shkBtn,#abBtn,#dodgeBtn{touch-action:manipulation;cursor:pointer}
 .glass{background:rgba(6,22,36,.95);border:1px solid rgba(126,249,255,.35)}
 #menu{position:fixed;inset:0;display:flex;flex-direction:column;justify-content:space-between;z-index:30;padding:10px;background:radial-gradient(circle at 50% 45%,rgba(4,18,31,.25) 0%,rgba(2,10,18,.68) 100%);pointer-events:auto}
@@ -92,7 +94,7 @@ textarea.svtxt{width:100%;height:78px;background:rgba(0,0,0,.5);color:#00f5d4;bo
       <span class="badge" style="color:#38bdf8;border:1px solid #38bdf8">⚛️ <b id="mCores">0</b></span>
     </div>
     <div class="bsGroup">
-      <button class="badge" style="color:#00f5d4;border:1px solid #00f5d4" onclick="openChat()">💬 Чат</button>
+      <button class="badge" id="menuChatBtn" style="color:#00f5d4;border:1px solid #00f5d4" onclick="openChat()">💬 Чат<span id="chatBang1" style="display:none;color:#ff4d6d;font-weight:900"> ❗</span></button>
       <button class="badge" style="color:#ff9f1c;border:1px solid #ff9f1c" onclick="openLeaderboard()">🌐 Топ</button>
       <button class="badge" style="color:#f472b6;border:1px solid #f472b6" onclick="redeemPromo()">🎁 Промо</button>
       <button class="badge" style="color:#ffb3c1;border:1px solid #ffb3c1" onclick="document.getElementById('newsModal').style.display='flex';snd('click')">📜</button>
@@ -440,6 +442,7 @@ textarea.svtxt{width:100%;height:78px;background:rgba(0,0,0,.5);color:#00f5d4;bo
 <button class="dfbtn" id="tdZmBtn" onclick="togTdZm()">🔍 0.7x</button>
 <button class="dfbtn" id="tdSpdBtn" onclick="togTdSpd()">⏩ x1</button>
 <button class="dfbtn" id="tdNextWvBtn" style="border-color:#00f5d4;color:#00f5d4" onclick="forceTdWave()">⚡ +Волна</button>
+<button class="dfbtn" style="border-color:#00f5d4;color:#00f5d4" onclick="openChat()">💬<span id="chatBang3" style="display:none;color:#ff4d6d;font-weight:900">❗</span></button>
 <button class="dfbtn" style="border-color:#ffd166;color:#ffd166" onclick="togTdPause(1)">⏸️</button>
 </div>
 </div>
@@ -476,9 +479,9 @@ textarea.svtxt{width:100%;height:78px;background:rgba(0,0,0,.5);color:#00f5d4;bo
 <div id="ui" class="glass"><div class="sc">Очки: <span id="sc">0</span> <span id="cmbBox">x2</span></div><div class="st" id="stg">Ур.1</div>
 <div class="bwrap" id="hpBarWrap"><div id="hpFill"></div></div>
 <div class="bwrap"><div id="fill"></div></div></div>
+<div id="hudChatBtn" class="glass" style="position:absolute;top:10px;right:194px;padding:7px 8px;border-radius:11px;color:#00f5d4;font-weight:bold;font-size:11px;z-index:10" onclick="openChat()">💬<span id="chatBang2" style="display:none;color:#ff4d6d;font-weight:900">❗</span></div>
 <div id="homeBtn" class="glass" style="color:#ffd166;border-color:rgba(255,209,102,.5)" onclick="togGamePause(1)">⏸️</div>
-<div id="zBtn" class="glass" onclick="togZoom()">🔍 +</div>
-<div id="mitBtn" onclick="startMitosis()">🧬 ДЕЛЕНИЕ</div>
+<div id="zBtn" class="glass" onclick="togZoom()">🔍 +</div><div id="mitBtn" onclick="startMitosis()">🧬 ДЕЛЕНИЕ</div>
 <canvas id="mm" class="glass" width="74" height="74"></canvas>
 <div id="jz"><div id="jk"></div></div>
 <div id="dodgeBtn" class="glass">💨 УВОРОТ</div>
@@ -965,11 +968,18 @@ let loc=[];try{loc=JSON.parse(localStorage.getItem('fl_lb_cache')||'[]')}catch(e
 renderLbList(loc,'⏳ Загрузка рейтинга...');pingOnline().then(()=>syncLeaderboard(1));
 }
 
-const CHAT_URL='https://zhgutik-game-default-rtdb.firebaseio.com/'+'/chat.json';
-let chatTimer=null,lastChatSend=0;
-
+const CHAT_URL=CLOUD_URL+'chat.json';
+let chatTimer=null,lastChatSend=0,lastSeenMsgTs=0,chatPausedGame=0;
+function setChatBangs(show){
+Array.of('chatBang1','chatBang2','chatBang3').forEach(id=>{
+  let el=document.getElementById(id);
+  if(el)el.style.display=show?'inline':'none';
+});
+}
 function openChat(){
 snd('click');
+setChatBangs(0);
+if(!inMenu&&!over&&!paused&&!pvp.act){paused=1;chatPausedGame=1;resetAllTouch()}
 document.getElementById('chatModal').style.display='flex';
 loadChat(1);
 clearInterval(chatTimer);
@@ -984,6 +994,7 @@ function closeChat(){
 snd('click');
 document.getElementById('chatModal').style.display='none';
 clearInterval(chatTimer);
+if(chatPausedGame){paused=0;chatPausedGame=0}
 }
 
 const MUTE_URL='https://zhgutik-game-default-rtdb.firebaseio.com/'+'/mutes';
@@ -1012,6 +1023,9 @@ html+='<div style="margin-bottom:6px;padding:4px 6px;border-radius:7px;backgroun
 '<span style="color:#ffd166;font-size:9px">(👑'+(m.b||0)+')</span>: '+
 '<span style="color:#f1f5f9">'+safeTxt+'</span>'+admTools+'</div>';
 });
+let lastEntry=entries.at(-1);
+if(lastEntry&&lastEntry[1]&&lastEntry[1].ts)lastSeenMsgTs=Math.max(lastSeenMsgTs,lastEntry[1].ts);
+setChatBangs(0);
 let atBottom=(box.scrollHeight-box.scrollTop-box.clientHeight)<50;
 box.innerHTML=html;
 if(scrollDown||atBottom)box.scrollTop=box.scrollHeight;
@@ -1569,8 +1583,11 @@ qMod.style.display='none';mitBtn.style.display='none';dodgeBtn.style.display='no
 inMenu=1;paused=0;mini=0;putinCine=0;renderMenu();
 let prevM=mode;mode=0;initWorld(0);mode=prevM;
 }
+function goFullScreen(){
+try{let el=document.documentElement;if(!document.fullscreenElement&&el.requestFullscreen)el.requestFullscreen().catch(()=>{});else if(!document.webkitFullscreenElement&&el.webkitRequestFullscreen)el.webkitRequestFullscreen()}catch(e){}
+}
 function startGame(){
-snd('evo');menuE.style.display='none';goE.style.display='none';qMod.style.display='none';
+goFullScreen();snd('evo');menuE.style.display='none';goE.style.display='none';qMod.style.display='none';
 hudE.style.display='block';inMenu=0;paused=0;mini=0;putinCine=0;initWorld(1);
 }
 const jz=document.getElementById('jz'),jk=document.getElementById('jk');
@@ -2256,7 +2273,7 @@ document.getElementById('tdStartWaveBtn').style.display='none';
 startTdWave();
 }
 function startTdMatch(){
-pvp.act=0;clearInterval(pvp.pollT);
+goFullScreen();pvp.act=0;clearInterval(pvp.pollT);
 document.getElementById('pvpTabs').style.display='none';document.getElementById('pvpSendBar').style.display='none';
 document.getElementById('tdDeckBar').style.display='grid';document.getElementById('tdIncSpan').style.display='none';
 document.getElementById('tdMaxWvWrap').style.display='inline';document.getElementById('tdNextWvBtn').style.display='inline-block';document.getElementById('tdSpdBtn').style.display='inline-block';
@@ -2301,14 +2318,17 @@ else{sv();snd('click');toMenu();openTdHub()}
 const PVP_URL=CLOUD_URL+'pvp_td';
 const PVP_PATH_L=Array.of({x:45,y:75},{x:680,y:75},{x:680,y:245},{x:80,y:245},{x:80,y:425},{x:695,y:425});
 const PVP_SENDS=Array.of(
-{n:'🧬 Жгутик',c:45,inc:5,mIdx:0,cnt:3,hpM:.85,spM:1.15},
-{n:'⚡ Спирилла',c:90,inc:11,mIdx:2,cnt:4,hpM:.95,spM:1.35},
-{n:'🛡️ Броненосец',c:175,inc:20,mIdx:4,cnt:2,hpM:1.8,spM:.85},
-{n:'🦠 Рой Фагов',c:280,inc:32,mIdx:10,cnt:5,hpM:1.2,spM:1.4},
-{n:'👾 Мутант-Амёба',c:460,inc:50,mIdx:15,cnt:2,hpM:2.5,spM:.85},
-{n:'👑 Мини-Босс',c:850,inc:90,mIdx:20,cnt:1,hpM:5.5,spM:.75}
+{n:'🧬 Орда Жгутиков',c:55,inc:6,mIdx:0,cnt:5,hpM:1.35,spM:1.25},
+{n:'⚡ Турбо-Спириллы',c:110,inc:13,mIdx:2,cnt:6,hpM:1.5,spM:1.55},
+{n:'🛡️ Титан-Броненосец',c:220,inc:25,mIdx:11,cnt:3,hpM:3.2,spM:.95},
+{n:'🦠 Рой Разведчиков',c:360,inc:40,mIdx:10,cnt:8,hpM:1.85,spM:1.65},
+{n:'👾 Мега-Амёба',c:580,inc:62,mIdx:15,cnt:3,hpM:4.6,spM:.95},
+{n:'💀 Мини-Босс',c:950,inc:100,mIdx:20,cnt:2,hpM:7.5,spM:.88},
+{n:'☣️ Чума-Голем',c:1500,inc:155,mIdx:28,cnt:2,hpM:12.5,spM:.82},
+{n:'🌌 Тихоходка',c:2800,inc:280,mIdx:29,cnt:1,hpM:22.0,spM:1.05},
+{n:'👑 ЛЕВИАФАН',c:5200,inc:520,mIdx:27,cnt:1,hpM:42.0,spM:.78}
 );
-let pvp={act:0,room:'',role:'',oppUid:'',oppNick:'Соперник',oppHp:25,inc:25,incT:0,wvT:0,sendCd:0,tab:0,pollT:null,evSeq:0,seenEv:{},oppTowers:[],oppMobs:[]};
+let pvp={act:0,room:'',role:'',oppUid:'',oppNick:'Соперник',oppHp:25,inc:25,incT:0,wvT:0,sendCd:0,tab:0,pollT:null,evSeq:0,seenEv:{},oppTowers:[],oppMobs:[],spLeft:0,spCd:0};
 
 function setPvpTab(t){
 snd('click');pvp.tab=t;
@@ -2378,21 +2398,25 @@ let s=PVP_SENDS.at(idx);if(!s)return;
 if(td.gold<s.c){showNot('Нужно '+s.c+'💰!','#d90429',80,0);return}
 td.gold-=s.c;pvp.inc+=s.inc;pvp.sendCd=27;snd('shock');
 document.getElementById('tdInc').innerText=pvp.inc;updTdUi();
+spawnPvpSentMobs(idx,td.wv,1);
 pushPvpEv({tp:'send',idx:idx,wv:td.wv});
 pop(td.camX+w/(2*td.zm),td.camY+120,'📤 ОТПРАВЛЕНО! Доход +'+s.inc+'💰/с','#4ade80');
 }
 function spawnPvpSentMobs(idx,wv,isOpp){
 let s=PVP_SENDS.at(idx),mDef=TD_MOBS.at(s.mIdx),ox=isOpp?910:0;
-let baseHp=(45+wv*28)*Math.pow(1.06,wv)*s.hpM;
+let baseHp=(85+wv*55+wv*wv*6)*Math.pow(1.17,wv)*s.hpM;
+let isB=(idx>=7),isM=(idx===5||idx===6);
+let rad=idx===8?28:(idx===7?24:(isM?20:mDef.r));
+let col=idx===8?'#ffd166':(idx===7?'#38bdf8':(isM?'#ff007f':mDef.c));
 for(let k=0;k<s.cnt;k++){
-let mob={x:PVP_PATH_L.at(0).x+ox,y:PVP_PATH_L.at(0).y,wp:1,hp:Math.round(baseHp),mhp:Math.round(baseHp),spd:(1.4+Math.min(1.2,wv*.025))*s.spM,slow:0,stun:0,psn:0,plague:0,boss:idx===5,mini:idx===4,col:idx===5?'#ff007f':mDef.c,nm:s.n,r:idx===5?22:(idx===4?17:mDef.r)};
+let mob={x:PVP_PATH_L.at(0).x+ox,y:PVP_PATH_L.at(0).y,wp:1,hp:Math.round(baseHp),mhp:Math.round(baseHp),spd:(1.75+Math.min(1.6,wv*.045))*s.spM,slow:0,stun:0,psn:0,plague:0,boss:isB,mini:isM,col:col,nm:s.n,r:rad};
 if(isOpp)pvp.oppMobs.push(mob);else td.mobs.push(mob);
 }
 }
 function startPvpMatch(rmId,role,oppUid,oppNick){
 document.getElementById('tdPvpModal').style.display='none';menuE.style.display='none';hudE.style.display='block';
 inMenu=0;over=0;paused=0;mini=6;snd('evo');
-pvp={act:1,room:rmId,role:role,oppUid:oppUid,oppNick:oppNick,oppHp:25,inc:25,incT:0,wvT:900,sendCd:0,tab:0,pollT:null,evSeq:0,seenEv:{},oppTowers:[],oppMobs:[]};
+pvp={act:1,room:rmId,role:role,oppUid:oppUid,oppNick:oppNick,oppHp:25,inc:25,incT:0,wvT:720,sendCd:0,tab:0,pollT:null,evSeq:0,seenEv:{},oppTowers:[],oppMobs:[],spLeft:0,spCd:0};
 document.getElementById('tdBar').style.display='block';
 document.getElementById('tdStartWaveBtn').style.display='none';
 document.getElementById('pvpTabs').style.display='grid';
@@ -2414,20 +2438,18 @@ showNot('⚔️ БОЙ ПРОТИВ '+oppNick+'! Свайпай вправо, ч
 pvp.pollT=setInterval(pollPvpState,900);
 }
 function startPvpWave(wv){
-td.wv=wv;let cnt=4+Math.floor(wv*1.3);
-for(let k=0;k<cnt;k++){
-let mDef=TD_MOBS.at((wv*2+k)%12),baseHp=(42+wv*26)*Math.pow(1.06,wv)*mDef.hp;
-let mk=(ox)=>({x:PVP_PATH_L.at(0).x+ox,y:PVP_PATH_L.at(0).y-k*14,wp:1,hp:Math.round(baseHp),mhp:Math.round(baseHp),spd:(1.35+Math.min(1.1,wv*.025))*mDef.sp,slow:0,stun:0,psn:0,plague:0,boss:0,mini:0,col:mDef.c,nm:mDef.nm,r:mDef.r});
-td.mobs.push(mk(0));pvp.oppMobs.push(mk(910));
-}
+td.wv=wv;
+pvp.spLeft=6+Math.floor(wv*1.8);
+pvp.spCd=1;
 updTdUi();
 }
 async function pollPvpState(){
 if(!pvp.act||mini!==6)return;
 try{
-let r=await fetch(PVP_URL+'/rooms/'+pvp.room+'.json');let rm=r.ok?await r.json():null;if(!rm)return;
+let r=await fetch(PVP_URL+'/rooms/'+pvp.room+'.json');let rm=r.ok?await r.json():null;
+if(!rm){finishPvpMatch(1);return}
 let oppKey=pvp.role==='p1'?'p2':'p1';
-if(rm[oppKey]&&typeof rm[oppKey].hp==='number')pvp.oppHp=rm[oppKey].hp;
+if(rm[oppKey]&&typeof rm[oppKey].hp==='number')pvp.oppHp=Math.min(pvp.oppHp,rm[oppKey].hp);
 if(pvp.oppHp<=0&&pvp.act){finishPvpMatch(1);return}
 if(rm.evs){
 for(let k in rm.evs){
@@ -2761,13 +2783,31 @@ if(mini===6){
 if(!td.started)return;
 let df=TD_DIFFS.at(td.diff);
 if(pvp.act){
+if(pvp.oppHp<=0){finishPvpMatch(1);return}
 if(pvp.sendCd>0)pvp.sendCd--;
 if(++pvp.incT>=60){pvp.incT=0;td.gold+=pvp.inc;updTdUi()}
-if(--pvp.wvT<=0){pvp.wvT=1080;startPvpWave(td.wv+1)}
+if(pvp.spLeft>0&&--pvp.spCd<=0){
+  pvp.spLeft--;pvp.spCd=Math.max(10,19-Math.floor(td.wv*.3));
+  let isWaveBoss=(td.wv%5===0&&pvp.spLeft===0);
+  let poolIdx=Math.min(29,(td.wv*2+pvp.spLeft)%Math.min(30,10+td.wv));
+  let mDef=TD_MOBS.at(poolIdx);
+  let baseHp=(75+td.wv*50+td.wv*td.wv*5)*Math.pow(1.16,td.wv)*(isWaveBoss?6.5:mDef.hp);
+  let mk=(ox)=>({x:PVP_PATH_L.at(0).x+ox,y:PVP_PATH_L.at(0).y,wp:1,hp:Math.round(baseHp),mhp:Math.round(baseHp),spd:(1.65+Math.min(1.5,td.wv*.04))*(isWaveBoss?.85:mDef.sp),slow:0,stun:0,psn:0,plague:0,boss:isWaveBoss?1:0,mini:0,col:isWaveBoss?'#ffd166':mDef.c,nm:isWaveBoss?('👑 Вожак Волны '+td.wv):mDef.nm,r:isWaveBoss?23:mDef.r});
+  td.mobs.push(mk(0));pvp.oppMobs.push(mk(910));
+}
+if(--pvp.wvT<=0){pvp.wvT=720;startPvpWave(td.wv+1)}
 for(let i=pvp.oppMobs.length-1;i>=0;i--){
 let om=pvp.oppMobs.at(i),trg=PVP_PATH_L.at(om.wp);
 let ang=Math.atan2(trg.y-om.y,(trg.x+910)-om.x);om.x+=Math.cos(ang)*om.spd;om.y+=Math.sin(ang)*om.spd;
-if(Math.hypot((trg.x+910)-om.x,trg.y-om.y)<om.spd+4){om.wp++;if(om.wp>=PVP_PATH_L.length)pvp.oppMobs.splice(i,1)}
+if(Math.hypot((trg.x+910)-om.x,trg.y-om.y)<om.spd+4){
+  om.wp++;
+  if(om.wp>=PVP_PATH_L.length){
+    pvp.oppHp=Math.max(0,pvp.oppHp-(om.boss?12:(om.mini?4:1)));
+    pvp.oppMobs.splice(i,1);
+    if(pvp.oppHp<=0){finishPvpMatch(1);return}
+    continue;
+  }
+}
 for(let otw of pvp.oppTowers){if(otw.tp===13||otw.tp===18||otw.tp===19||otw.tp===24||otw.tp===27)continue;if(Math.hypot(om.x-otw.x,om.y-otw.y)<=TD_DEFS.at(otw.tp).rng+otw.lv*16){otw.a=Math.atan2(om.y-otw.y,om.x-otw.x);om.hp-=(TD_DEFS.at(otw.tp).dmg*Math.pow(1.45,otw.lv-1))/Math.max(8,TD_DEFS.at(otw.tp).cd);if(om.hp<=0){pvp.oppMobs.splice(i,1);break}}}
 }
 }
@@ -3293,6 +3333,21 @@ if(cmb>=3){x.strokeStyle=cmb>=12?'rgba(255,0,127,.45)':'rgba(255,209,102,.35)';x
 if(!inMenu&&mini!==1&&mini!==2&&mini!==5){mx.clearRect(0,0,74,74);let s=74/W;if(schoolMode&&mode===1){for(let rm of ROOMS){mx.fillStyle='rgba(126,249,255,.22)';mx.fillRect(rm.x*s,rm.y*s,rm.w*s,rm.h*s)}mx.strokeStyle='#ff0033';mx.lineWidth=2;mx.beginPath();mx.arc(8000*s,2000*s,6.5,0,6.283);mx.stroke()}for(let e of en){mx.fillStyle=e.boss?'#ffd166':(mode===1?'#ff4d6d':((e.t==='bac'||p.lv>e.evo||p.r>e.r*1.12)?'#80ed99':'#ff4d6d'));mx.fillRect(e.x*s,e.y*s,e.boss?4:2,e.boss?4:2)}if(kondra.act){mx.fillStyle='#d52b1e';mx.beginPath();mx.arc(kondra.x*s,kondra.y*s,4.5,0,6.283);mx.fill()}if(putin.act){mx.fillStyle='#ffd166';mx.beginPath();mx.arc(putin.x*s,putin.y*s,5.5,0,6.283);mx.fill()}if(tardigrade.act){mx.fillStyle='#7ef9ff';mx.beginPath();mx.arc(tardigrade.x*s,tardigrade.y*s,5.5,0,6.283);mx.fill()}if(rimma.act&&!rimma.cosmo){mx.fillStyle=mode===4?'#ff4d6d':'#e0aaff';mx.beginPath();mx.arc(rimma.x*s,rimma.y*s,mode===4?5:4,0,6.283);mx.fill()}if(mode===5){mx.fillStyle='#fff';mx.beginPath();mx.arc(cook.x*s,cook.y*s,4.5,0,6.283);mx.fill();mx.fillStyle='#00f5d4';mx.fillRect(vent.x*s-3,vent.y*s-3,6,6)}mx.fillStyle=skin.m;mx.beginPath();mx.arc(p.x*s,p.y*s,3,0,6.283);mx.fill()}
 }
 window.onerror=function(m,u,l){alert('ОШИБКА СТР '+l+': '+m)};
+setInterval(async()=>{
+if(document.hidden||document.getElementById('chatModal').style.display==='flex')return;
+try{
+  let r=await fetch(CHAT_URL+'?orderBy=%22$key%22&limitToLast=1');
+  if(!r.ok)return;
+  let d=await r.json();
+  if(!d)return;
+  let vals=Object.values(d);
+  let lastM=vals.at(-1);
+  if(lastM&&lastM.ts){
+    if(lastSeenMsgTs===0){lastSeenMsgTs=lastM.ts}
+    else if(lastM.ts>lastSeenMsgTs&&lastM.uid!==save.uid){setChatBangs(1)}
+  }
+}catch(e){}
+},4000);
 function lp(){upd();drw();requestAnimationFrame(lp)}initWorld(0);notBox.style.display='none';lp();
 </script>
 </body>
