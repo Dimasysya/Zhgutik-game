@@ -870,7 +870,7 @@ function setLbTab(t){
     if(b)b.classList.toggle('act',k===t);
   });
   let baseSt=(document.getElementById('lbStatus').innerText||'').split(' | ');
-  renderLbList(lbRawArr,baseSt);
+  renderLbList(lbRawArr,document.getElementById('lbStatus').innerText.split(' | ').at(0));
 }
 async function syncLeaderboard(forceShow=0){
 if(save.banned)return;
