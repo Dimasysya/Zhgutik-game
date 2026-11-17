@@ -2334,7 +2334,7 @@ const PVP_SENDS=Array.of(
 {n:'🌌 Тихоходка',c:2800,inc:280,mIdx:29,cnt:1,hpM:22.0,spM:1.05},
 {n:'👑 ЛЕВИАФАН',c:5200,inc:520,mIdx:27,cnt:1,hpM:42.0,spM:.78}
 );
-let pvp={act:0,room:'',role:'',oppUid:'',oppNick:'Соперник',oppHp:25,inc:25,incT:0,wvT:0,sendCd:0,tab:0,pollT:null,evSeq:0,seenEv:{},oppTowers:[],oppMobs:[],spLeft:0,spCd:0};
+let pvp={act:0,room:'',role:'',oppUid:'',oppNick:'Соперник',oppHp:25,inc:25,incT:0,wvT:0,sendCd:0,tab:0,pollT:null,evSeq:0,seenEv:{},oppTowers:[],oppMobs:[],oppShots:[],spLeft:0,spCd:0};
 
 function setPvpTab(t){
 snd('click');pvp.tab=t;
@@ -2422,7 +2422,7 @@ if(isOpp)pvp.oppMobs.push(mob);else td.mobs.push(mob);
 function startPvpMatch(rmId,role,oppUid,oppNick){
 document.getElementById('tdPvpModal').style.display='none';menuE.style.display='none';hudE.style.display='block';
 inMenu=0;over=0;paused=0;mini=6;snd('evo');
-pvp={act:1,room:rmId,role:role,oppUid:oppUid,oppNick:oppNick,oppHp:25,inc:25,incT:0,wvT:720,sendCd:0,tab:0,pollT:null,evSeq:0,seenEv:{},oppTowers:[],oppMobs:[],spLeft:0,spCd:0};
+pvpMiss=0;pvp={act:1,room:rmId,role:role,oppUid:oppUid,oppNick:oppNick,oppHp:25,inc:25,incT:0,wvT:720,sendCd:0,tab:0,pollT:null,evSeq:0,seenEv:{},oppTowers:[],oppMobs:[],oppShots:[],spLeft:0,spCd:0};
 document.getElementById('tdBar').style.display='block';
 document.getElementById('tdStartWaveBtn').style.display='none';
 document.getElementById('pvpTabs').style.display='grid';
@@ -2449,13 +2449,17 @@ pvp.spLeft=6+Math.floor(wv*1.8);
 pvp.spCd=1;
 updTdUi();
 }
+let pvpMiss=0;
 async function pollPvpState(){
 if(!pvp.act||mini!==6)return;
 try{
-let r=await fetch(PVP_URL+'/rooms/'+pvp.room+'.json');let rm=r.ok?await r.json():null;
-if(!rm){finishPvpMatch(1);return}
+let r=await fetch(PVP_URL+'/rooms/'+pvp.room+'.json');
+if(!r.ok)return;
+let rm=await r.json();
+if(!rm){if(++pvpMiss>=3)finishPvpMatch(1);return}
+pvpMiss=0;
 let oppKey=pvp.role==='p1'?'p2':'p1';
-if(rm[oppKey]&&typeof rm[oppKey].hp==='number')pvp.oppHp=Math.min(pvp.oppHp,rm[oppKey].hp);
+if(rm[oppKey]&&typeof rm[oppKey].hp==='number')pvp.oppHp=rm[oppKey].hp;
 if(pvp.oppHp<=0&&pvp.act){finishPvpMatch(1);return}
 if(rm.evs){
 for(let k in rm.evs){
@@ -2808,13 +2812,36 @@ let ang=Math.atan2(trg.y-om.y,(trg.x+910)-om.x);om.x+=Math.cos(ang)*om.spd;om.y+
 if(Math.hypot((trg.x+910)-om.x,trg.y-om.y)<om.spd+4){
   om.wp++;
   if(om.wp>=PVP_PATH_L.length){
-    pvp.oppHp=Math.max(0,pvp.oppHp-(om.boss?12:(om.mini?4:1)));
     pvp.oppMobs.splice(i,1);
-    if(pvp.oppHp<=0){finishPvpMatch(1);return}
     continue;
   }
 }
 for(let otw of pvp.oppTowers){if(otw.tp===13||otw.tp===18||otw.tp===19||otw.tp===24||otw.tp===27)continue;if(Math.hypot(om.x-otw.x,om.y-otw.y)<=TD_DEFS.at(otw.tp).rng+otw.lv*16){otw.a=Math.atan2(om.y-otw.y,om.x-otw.x);om.hp-=(TD_DEFS.at(otw.tp).dmg*Math.pow(1.45,otw.lv-1))/Math.max(8,TD_DEFS.at(otw.tp).cd);if(om.hp<=0){pvp.oppMobs.splice(i,1);break}}}
+}
+for(let otw of pvp.oppTowers){
+  if(otw.tp===13||otw.tp===18||otw.tp===19||otw.tp===24||otw.tp===27)continue;
+  if((otw.cd||0)>0){otw.cd--;continue}
+  let tDef=TD_DEFS.at(otw.tp),rng=tDef.rng+otw.lv*16;
+  let trg=pvp.oppMobs.find(om=>Math.hypot(om.x-otw.x,om.y-otw.y)<=rng);
+  if(trg){
+    otw.a=Math.atan2(trg.y-otw.y,trg.x-otw.x);
+    otw.cd=Math.max(6,Math.round(tDef.cd-otw.lv*2.5));
+    if(otw.tp===5||otw.tp===7||otw.tp===9||otw.tp===10||otw.tp===16||otw.tp===28){
+      if(td.beams.length<45)td.beams.push({tp:otw.tp===28?9:otw.tp,x1:otw.x,y1:otw.y,x2:trg.x,y2:trg.y,col:tDef.col,l:7});
+    }else if(pvp.oppShots.length<60){
+      pvp.oppShots.push({tp:otw.tp,lv:otw.lv,x:otw.x,y:otw.y,tx:trg.x,ty:trg.y,trg:trg,col:tDef.col});
+    }
+  }
+}
+for(let i=pvp.oppShots.length-1;i>=0;i--){
+  let s=pvp.oppShots.at(i);
+  if(pvp.oppMobs.includes(s.trg)){s.tx=s.trg.x;s.ty=s.trg.y}
+  let ang=Math.atan2(s.ty-s.y,s.tx-s.x);
+  s.x+=Math.cos(ang)*15;s.y+=Math.sin(ang)*15;
+  if(Math.hypot(s.tx-s.x,s.ty-s.y)<16){
+    if(s.tp===4||s.tp===12||s.tp===14||s.tp===29)td.booms.push({x:s.tx,y:s.ty,r:65+s.lv*14,col:s.col,l:12});
+    pvp.oppShots.splice(i,1);
+  }
 }
 }
 for(let step=0;step<td.spd;step++){
@@ -3194,6 +3221,7 @@ x.strokeStyle='rgba(255,0,127,.22)';x.lineWidth=42;x.lineCap='round';x.lineJoin=
 x.strokeStyle='#2b1122';x.lineWidth=32;x.stroke();
 for(let otw of pvp.oppTowers){drwTdTowerModel(x,otw.tp,otw.x,otw.y,otw.a,otw.lv,otw.sk);x.fillStyle='#ff007f';x.font='bold 10px sans-serif';x.textAlign='center';x.fillText('⭐'+otw.lv,otw.x,otw.y-24)}
 for(let om of pvp.oppMobs){x.fillStyle=om.col;x.beginPath();x.arc(om.x,om.y,om.r,0,6.283);x.fill();x.fillStyle='#111';x.fillRect(om.x-14,om.y-om.r-7,28,3);x.fillStyle='#ff4d6d';x.fillRect(om.x-14,om.y-om.r-7,28*(om.hp/om.mhp),3)}
+for(let os of pvp.oppShots){x.fillStyle=os.col;x.beginPath();x.arc(os.x,os.y,4+os.lv,0,6.283);x.fill();x.strokeStyle='#fff';x.lineWidth=1;x.stroke()}
 x.strokeStyle='rgba(0,245,212,.18)';x.lineWidth=44;x.lineCap='round';x.lineJoin='round';x.beginPath();td.path.forEach((pt,idx)=>idx===0?x.moveTo(pt.x,pt.y):x.lineTo(pt.x,pt.y));x.stroke();
 }else{
 drwTdDecor(mp);
