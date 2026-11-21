@@ -4086,8 +4086,8 @@ for(let i=td.nums.length-1;i>=0;i--){td.nums.at(i).y-=.8;if(--td.nums.at(i).l<=0
 return;
 }
 if(headStartT>0)headStartT--;else regenT++;
-if(hasPas('ab10')&&regenT%600===0){let lv10=abLv('ab10');addScore(50+lv10*50);let dg=(3+lv10*3)*(actBst.dna2?2:1);runDna+=dg;save.dna+=dg;sv();pop(p.x,p.y-28,'🧬 +'+(50+lv10*50)+' | +'+dg+'🧬','#e0aaff')}
-if(hasPas('ab23')&&regenT%240===0){let lv23=abLv('ab23'),hl=5+lv23*10;p.en=Math.min(p.maxEn,p.en+hl);p.hp=Math.min(p.maxHp,p.hp+hl);hpFill.style.width=(p.hp/p.maxHp*100)+'%'}
+if(headStartT<=0&&regenT>0&&hasPas('ab10')&&regenT%600===0){let lv10=abLv('ab10');addScore(50+lv10*50);let dg=(3+lv10*3)*(actBst.dna2?2:1);runDna+=dg;save.dna+=dg;sv();pop(p.x,p.y-28,'🧬 +'+(50+lv10*50)+' | +'+dg+'🧬','#e0aaff')}
+if(headStartT<=0&&regenT>0&&hasPas('ab23')&&regenT%240===0){let lv23=abLv('ab23'),hl=5+lv23*10;p.en=Math.min(p.maxEn,p.en+hl);p.hp=Math.min(p.maxHp,p.hp+hl);hpFill.style.width=(p.hp/p.maxHp*100)+'%'}
 if(hasPas('ab18')&&mode!==1&&++harpoonCd>=Math.max(120,360-abLv('ab18')*48)){harpoonCd=0;for(let j=en.length-1;j>=0;j--){let e=en.at(j);if(!e.boss&&e.t!=='phg'&&(e.t==='bac'||p.lv>e.evo||p.r>e.r*1.12)&&Math.hypot(e.x-p.x,e.y-p.y)<360){e.x=p.x;e.y=p.y;pop(p.x,p.y-25,'🧲 ГАРПУН!','#00f5d4');break}}}
 if(headStartT<=0&&save.eqPet&&petLv(save.eqPet)>0&&!inMenu&&!mini){
   let pId=save.eqPet,plv=petLv(pId),pa=Date.now()/450;
