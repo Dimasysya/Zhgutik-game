@@ -4575,9 +4575,9 @@ for(let al of td.allies){
   }else if(al.ext){
     x.save();x.translate(al.x,al.y);x.rotate(al.a||0);
     x.fillStyle='#dc2626';x.strokeStyle='#991b1b';x.lineWidth=1.8;
-    x.beginPath();ctx?0:0;x.roundRect(-12,-6,22,12,4);x.fill();x.stroke();
+    x.beginPath();x.roundRect(-12,-6,22,12,4);x.fill();x.stroke();
     x.fillStyle='#f8fafc';x.fillRect(-5,-4.5,10,9);
-    x.fillStyle='#1e293b';ctx?0:0;x.fillRect(10,-2.5,4,5);
+    x.fillStyle='#1e293b';x.fillRect(10,-2.5,4,5);
     x.fillStyle='#ffd166';x.beginPath();x.arc(12,-4,2,0,6.283);x.fill();
     x.restore();
   }else if(al.deer){
