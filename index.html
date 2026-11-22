@@ -525,6 +525,8 @@ textarea.svtxt{width:100%;height:78px;background:rgba(0,0,0,.5);color:#00f5d4;bo
 <h3 style="margin:0 0 10px;color:#ffd166;font-size:17px">⏸️ ПАУЗА (TD)</h3>
 <button class="mbtn" style="margin-bottom:6px" onclick="togTdPause(0)">▶️ ПРОДОЛЖИТЬ</button>
 <button class="mbtn sbtn" id="tdAutoBtn" style="margin-bottom:6px;border-color:#00f5d4;color:#00f5d4" onclick="togTdAuto()">⏭️ Автоскип перерыва: ВЫКЛ</button>
+<button class="mbtn sbtn" id="tdRushBtn" style="margin-bottom:6px;border-color:#ff9f1c;color:#ff9f1c" onclick="togTdRush()">🌊 Поток волн (без ожидания): ВЫКЛ</button>
+<button class="mbtn sbtn" style="margin-bottom:6px;border-color:#a8ff78;color:#a8ff78" onclick="upgAllTdTowers()">⬆️ ПРОКАЧАТЬ ВСЕ БАШНИ</button>
 <div id="tdAdmCheats" style="display:none;margin-bottom:6px;border-top:1px dashed #ffd166;padding-top:6px">
 <button class="mbtn" style="background:#ffd166;font-size:11px;padding:6px;margin-bottom:4px" onclick="td.gold+=999999;updTdUi();snd('evo');togTdPause(0);showNot('👑 +999 999💰 ВЫДАНО!','#ffd166',140,0)">👑 +999 999💰 ЗОЛОТА</button>
 <button class="mbtn" style="background:#00f5d4;font-size:11px;padding:6px;margin-bottom:4px" onclick="td.towers.forEach(t=>t.lv=5);updTdUi();snd('evo');togTdPause(0);showNot('⭐ ВСЕ БАШНИ ПРОКАЧАНЫ ДО 5 УР.!','#00f5d4',140,0)">👑 ВСЕ БАШНИ 5⭐</button>
@@ -3378,6 +3380,24 @@ function togTdAuto(){
 snd('click');td.autoSkip=td.autoSkip?0:1;
 document.getElementById('tdAutoBtn').innerText='⏭️ Автоскип перерыва: '+(td.autoSkip?'ВКЛ':'ВЫКЛ');
 }
+function togTdRush(){
+snd('click');td.rushWaves=td.rushWaves?0:1;
+document.getElementById('tdRushBtn').innerText='🌊 Поток волн (без ожидания): '+(td.rushWaves?'ВКЛ':'ВЫКЛ');
+}
+function upgAllTdTowers(){
+let cnt=0,upgraded=1;
+while(upgraded){
+  upgraded=0;
+  for(let tw of td.towers){
+    let maxLv=tw.tp===65?6:5;if(tw.lv>=maxLv)continue;
+    let df=TD_DEFS.at(tw.tp),upC=(tw.tp===28||tw.tp===29)?((tw.lv+1)*10000):Math.round(df.c*1.15*Math.pow(1.48,tw.lv-1));
+    if(td.gold>=upC){td.gold-=upC;tw.lv++;tw.spent+=upC;cnt++;upgraded=1;if(tw.lv>=5)unlock('a86')}
+  }
+}
+updTdUi();togTdPause(0);
+if(cnt>0){snd('evo');showNot('⬆️ УЛУЧШЕНО БАШЕН: +'+cnt+' УР.!','#a8ff78',160,0)}
+else showNot('Не хватает золота или все башни макс. уровня!','#ff9f1c',140,0);
+}
 function beginTdMatch(){
 if(mini!==6||td.started)return;
 snd('evo');td.started=1;
@@ -3412,7 +3432,7 @@ td.sel=0;td.zm=.72;td.maxPl=0;let mb=document.getElementById('tdMaxPlBtn');if(mb
 updTdUi();showNot('🛡️ РАССТАВЬТЕ БАШНИ И НАЖМИТЕ «НАЧАТЬ БОЙ»!','#00f5d4',240,0);
 }
 function togTdZm(){snd('click');td.zm=td.zm===.72?.45:(td.zm===.45?1:.72);document.getElementById('tdZmBtn').innerText='🔍 '+td.zm+'x';let szW=pvp.act?1660:TD_MAPS.at(td.map).sz,szH=pvp.act?500:TD_MAPS.at(td.map).sz,pad=450/td.zm;td.camX=Math.max(-pad,Math.min(szW-w/td.zm+pad,td.camX));td.camY=Math.max(-pad,Math.min(szH-h/td.zm+pad,td.camY))}
-function togTdSpd(){snd('click');td.spd=td.spd===1?2:(td.spd===2?3:(td.spd===3?4:(td.spd===4?5:1)));if(td.spd===5)unlock('a94');document.getElementById('tdSpdBtn').innerText='⏩ x'+td.spd}
+function togTdSpd(){snd('click');td.spd=td.spd===1?2:(td.spd===2?3:(td.spd===3?4:(td.spd===4?5:(td.spd===5?10:(td.spd===10?20:1)))));if(td.spd>=5)unlock('a94');document.getElementById('tdSpdBtn').innerText='⏩ x'+td.spd}
 function togTdMaxPl(){snd('click');td.maxPl=td.maxPl?0:1;let b=document.getElementById('tdMaxPlBtn');b.innerText='⭐ Макс: '+(td.maxPl?'ВКЛ':'ВЫКЛ');b.classList.toggle('act',!!td.maxPl)}
 function forceTdWave(){if(mini!==6||!td.started||td.spLeft>0||td.wv>=td.maxWv)return;snd('bell');td.breakT=0;td.gold+=18+td.wv*2;td.wv++;addQuestProg('tdWave',1);startTdWave()}
 function updTdUi(){
@@ -4087,7 +4107,7 @@ for(let step=0;step<td.spd;step++){
 if(!pvp.act){
 if(td.breakT>0){td.breakT--;if(td.breakT===0){td.wv++;addQuestProg('tdWave',1);startTdWave()}}
 else if(td.spLeft>0){if(--td.spCd<=0){td.spLeft--;td.spCd=Math.max(12,36-Math.floor(td.wv*.5));td.mobs.push(makeTdMob(td.wv,td.spLeft,df))}}
-else if(td.mobs.length===0){let uniqTp=Array.from(new Set(td.towers.map(t=>t.tp)));uniqTp.forEach(tp2=>addTdMastXp(tp2,3));sv();if(td.wv>=td.maxWv){exitTD(1);return}let labCnt=td.towers.filter(t=>t.tp===18).length;td.gold+=42+td.wv*7+labCnt*30;updTdUi();if(td.autoSkip){td.wv++;addQuestProg('tdWave',1);startTdWave()}else{td.breakT=180;showNot('⏳ ПЕРЕРЫВ 3 СЕК. ДО ВОЛНЫ '+(td.wv+1)+'!','#00f5d4',170,0)}}
+else if(td.mobs.length===0||(td.rushWaves&&td.wv<td.maxWv)){let uniqTp=Array.from(new Set(td.towers.map(t=>t.tp)));uniqTp.forEach(tp2=>addTdMastXp(tp2,3));sv();if(td.wv>=td.maxWv){exitTD(1);return}let labCnt=td.towers.filter(t=>t.tp===18).length;td.gold+=42+td.wv*7+labCnt*30;updTdUi();if(td.rushWaves){td.breakT=45}else if(td.autoSkip){td.wv++;addQuestProg('tdWave',1);startTdWave()}else{td.breakT=180;showNot('⏳ ПЕРЕРЫВ 3 СЕК. ДО ВОЛНЫ '+(td.wv+1)+'!','#00f5d4',170,0)}}
 }
 for(let i=td.mobs.length-1;i>=0;i--){
 let m=td.mobs.at(i),trg=td.path.at(m.wp);if(m.slow>0)m.slow--;if(m.vuln>0)m.vuln--;if(m.psn>0){m.psn--;m.hp-=m.mhp*.0016}
