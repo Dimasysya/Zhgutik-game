@@ -331,18 +331,14 @@ textarea.svtxt{width:100%;height:78px;background:rgba(0,0,0,.5);color:#00f5d4;bo
   <div style="grid-column:span 2">🏷️ Титул в чате (CLEAR=убрать):<input id="edBadge" type="text" maxlength="14" style="width:100%;padding:5px;border-radius:7px;border:1px solid #f472b6;background:rgba(0,0,0,.6);color:#fff;font-size:12px"></div>
 </div>
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:8px">
-  <button class="dfbtn" style="padding:6px;border-color:#ffd166;color:#ffd166" onclick="admGrantPreset('tw_all')">🏰 Все башни TD (64)</button>
-  <button class="dfbtn" style="padding:6px;border-color:#38bdf8;color:#38bdf8" onclick="admGrantPreset('tw_one')">➕ Башня по ID (0-63)</button>
+  <button class="dfbtn" style="padding:6px;border-color:#ffd166;color:#ffd166" onclick="admGrantPreset('tw_all')">🏰 Все башни TD (70)</button>
+  <button class="dfbtn" style="padding:6px;border-color:#38bdf8;color:#38bdf8" onclick="admGrantPreset('tw_one')">➕ Башня по ID (0-69)</button>
   <button class="dfbtn" style="padding:6px;border-color:#f59e0b;color:#f59e0b" onclick="admGrantPreset('mast_all')">🎖️ Мастерство 10 ВСЕМ</button>
   <button class="dfbtn" style="padding:6px;border-color:#fbbf24;color:#fbbf24" onclick="admGrantPreset('mast_one')">🎖️ Мастерство по ID</button>
   <button class="dfbtn" style="padding:6px;border-color:#e879f9;color:#e879f9" onclick="admGrantPreset('td_skins')">🎨 Все скины башен</button>
   <button class="dfbtn" style="padding:6px;border-color:#ef4444;color:#ef4444" onclick="admGrantPreset('tw_misha')">🧯 Выдать Мишу</button>
-  <button class="dfbtn" style="padding:6px;border-color:#f59e0b;color:#f59e0b" onclick="admGrantPreset('tw_eng')">🛠️ Выдать Артёма</button>
-  <button class="dfbtn" style="padding:6px;border-color:#38bdf8;color:#38bdf8" onclick="admGrantPreset('tw_brawl')">🥊 Выдать Сашу</button>
-  <button class="dfbtn" style="padding:6px;border-color:#10b981;color:#10b981" onclick="admGrantPreset('tw_necro')">💀 Выдать Матвея</button>
-  <button class="dfbtn" style="padding:6px;border-color:#00f5d4;color:#00f5d4" onclick="admGrantPreset('tw_hack')">💻 Выдать Веронику</button>
-  <button class="dfbtn" style="padding:6px;border-color:#38bdf8;color:#38bdf8" onclick="admGrantPreset('tw_accel')">⚡ Выдать Даню</button>
   <button class="dfbtn" style="padding:6px;border-color:#f43f5e;color:#f43f5e" onclick="admGrantPreset('tw_archon')">👑 Башни Архонта</button>
+  <button class="dfbtn" style="padding:6px;border-color:#f43f5e;color:#f43f5e" onclick="admGrantPreset('hc_gems')">🩸 +5000 Кристаллов</button>
   <button class="dfbtn" style="padding:6px;border-color:#a8ff78;color:#a8ff78" onclick="admGrantPreset('pet_all')">🐾 Все питомцы 5⭐</button>
   <button class="dfbtn" style="padding:6px;border-color:#e0aaff;color:#e0aaff" onclick="admGrantPreset('ab_all')">🎰 Все скиллы 5⭐</button>
   <button class="dfbtn" style="padding:6px;border-color:#00f5d4;color:#00f5d4" onclick="admGrantPreset('ach_all')">🏆 Все 130 трофеев</button>
@@ -576,7 +572,7 @@ textarea.svtxt{width:100%;height:78px;background:rgba(0,0,0,.5);color:#00f5d4;bo
 <div id="tdAbBar" style="display:none;position:fixed;left:8px;top:38%;transform:translateY(-50%);z-index:29;flex-direction:column;gap:5px;max-height:46vh;overflow-y:auto;padding:2px"></div>
 <div id="tdBar" class="glass" style="display:none;position:fixed;bottom:8px;left:50%;transform:translateX(-50%);z-index:28;padding:6px 7px;border-radius:14px;width:96%;max-width:400px;text-align:center">
 <div style="display:flex;justify-content:space-between;align-items:center;font-size:10px;font-weight:bold;color:#ffd166;margin-bottom:4px">
-<span>🌊 <b id="tdWv">1</b><span id="tdMaxWvWrap">/<b id="tdMaxWv">20</b></span> | ❤️ <b id="tdHp">25</b> | 💰 <b id="tdGld">160</b><span id="tdIncSpan" style="display:none;color:#4ade80"> (+<b id="tdInc">25</b>/с)</span> | 🏰 <b id="tdTwCnt">0</b>/50</span>
+<span>🌊 <b id="tdWv">1</b><span id="tdMaxWvWrap">/<b id="tdMaxWv">20</b></span> | ❤️ <b id="tdHp">25</b> | 💰 <b id="tdGld">160</b><span id="tdIncSpan" style="display:none;color:#4ade80"> (+<b id="tdInc">25</b>/с)</span> | 🏰 <b id="tdTwCnt">0/50</b></span>
 <div style="display:flex;gap:3px">
 <button class="dfbtn" id="tdMaxPlBtn" onclick="togTdMaxPl()">⭐ Макс: ВЫКЛ</button>
 <button class="dfbtn" id="tdZmBtn" onclick="togTdZm()">🔍 0.7x</button>
@@ -953,8 +949,8 @@ function togLowGfx(){lowGfx=lowGfx?0:1;let b=document.getElementById('fpsBtn');i
 function sv(urgent=0){save.dna=Math.round(save.dna||0);if(save.dna>=100000)unlock('a128');try{localStorage.setItem('fl_save12',JSON.stringify(save));syncLeaderboard(0);autoCloudSync(urgent)}catch(e){}}
 function openMyProfile(){
   snd('click');
-  let twCnt=save.tdOwn.filter(Boolean).length;
-  lbCacheArr=[{uid:save.uid,nick:save.nick,best:save.best,mBest:save.mBest||{},dna:save.dna,ach:Object.keys(save.ach).length,wv:save.tdBestWv||0,tw:twCnt,playSec:save.playSec||0,sk:save.sk||0,pet:save.eqPet||'',petLv:save.eqPet?petLv(save.eqPet):0,ab:save.eqAb||'',abLv:save.eqAb?abLv(save.eqAb):0,pas:(save.slot2&&save.eqPas)?save.eqPas:'',pasLv:(save.slot2&&save.eqPas)?abLv(save.eqPas):0,deck:save.tdEq.slice(),mast:save.tdMast||{},duelBul:save.duelBul||0,duelAim:save.duelAim||0,kills:(save.st&&save.st.kills)||0,eaten:(save.st&&save.st.eaten)||0}];
+  let twCnt=save.tdOwn.filter((v,idx)=>v&&(!TD_DEFS[idx]||TD_DEFS[idx].lock!=='Эксклюзив от Админа')).length;
+  lbCacheArr=[{uid:save.uid,nick:save.nick,best:save.best,mBest:save.mBest||{},dna:save.dna,hcGems:save.hcGems||0,ach:Object.keys(save.ach).length,wv:save.tdBestWv||0,tw:twCnt,playSec:save.playSec||0,sk:save.sk||0,pet:save.eqPet||'',petLv:save.eqPet?petLv(save.eqPet):0,ab:save.eqAb||'',abLv:save.eqAb?abLv(save.eqAb):0,pas:(save.slot2&&save.eqPas)?save.eqPas:'',pasLv:(save.slot2&&save.eqPas)?abLv(save.eqPas):0,deck:save.tdEq.slice(),mast:save.tdMast||{},duelBul:save.duelBul||0,duelAim:save.duelAim||0,kills:(save.st&&save.st.kills)||0,eaten:(save.st&&save.st.eaten)||0}];
   openPlayerProfile(0);
   let pb=document.getElementById('profBody');
   if(pb)pb.innerHTML+='<button class="mbtn sbtn" style="margin-top:6px" onclick="document.getElementById(\'profModal\').style.display=\'none\';changeNick()">✏️ СМЕНИТЬ НИКНЕЙМ</button>';
@@ -1416,7 +1412,7 @@ async function syncLeaderboard(forceShow=0){
 if(save.banned)return;
 let twCnt=save.tdOwn.filter((v,idx)=>v&&(!TD_DEFS[idx]||!TD_DEFS[idx].lock||TD_DEFS[idx].lock!=='Эксклюзив от Админа')).length;
 let me={
-  uid:save.uid,nick:save.nick,best:save.best,mBest:save.mBest||{},dna:save.dna,ach:Object.keys(save.ach).length,wv:save.tdBestWv||0,tw:twCnt,playSec:save.playSec||0,
+  uid:save.uid,nick:save.nick,best:save.best,mBest:save.mBest||{},dna:save.dna,hcGems:save.hcGems||0,ach:Object.keys(save.ach).length,wv:save.tdBestWv||0,tw:twCnt,playSec:save.playSec||0,
   sk:save.sk||0,pet:save.eqPet||'',petLv:save.eqPet?petLv(save.eqPet):0,
   ab:save.eqAb||'',abLv:save.eqAb?abLv(save.eqAb):0,
   pas:(save.slot2&&save.eqPas)?save.eqPas:'',pasLv:(save.slot2&&save.eqPas)?abLv(save.eqPas):0,
@@ -1458,7 +1454,7 @@ d.className='aitem'+(isMe?' done':'');d.style.cursor='pointer';
 d.onclick=()=>openPlayerProfile(i);
 let pIc=(p2.pet&&PETS.find(v=>v.id===p2.pet))?(PETS.find(v=>v.id===p2.pet).ic+' '):'';
 let val=getSc(p2),rightTxt=lbTab==='time'?('⏱️ '+fmtPlayTime(val)):('👑 '+val);
-d.innerHTML='<b>#'+(i+1)+' '+(on?'🟢 ':'⚫ ')+(i===0?'👑 ':i===1?'🥈 ':i===2?'🥉 ':'')+pIc+p2.nick+(isMe?' (Вы)':'')+'</b> <span style="color:#ffd166;float:right">'+rightTxt+'</span><br><span style="color:#adb5bd">⏱️ '+fmtPlayTime(p2.playSec)+' | 🧬 '+Math.round(p2.dna||0)+' | 🏆 '+p2.ach+'/130 | 🏰 '+(p2.tw||1)+'/62</span>';
+d.innerHTML='<b>#'+(i+1)+' '+(on?'🟢 ':'⚫ ')+(i===0?'👑 ':i===1?'🥈 ':i===2?'🥉 ':'')+pIc+p2.nick+(isMe?' (Вы)':'')+'</b> <span style="color:#ffd166;float:right">'+rightTxt+'</span><br><span style="color:#adb5bd">⏱️ '+fmtPlayTime(p2.playSec)+' | 🧬 '+Math.round(p2.dna||0)+' | 🏆 '+p2.ach+'/130 | 🏰 '+(p2.tw||1)+'/67</span>';
 box.appendChild(d);
 });
 }
@@ -1492,8 +1488,8 @@ document.getElementById('profBody').innerHTML=
 '👑 Общий рекорд: <b style="color:#ffd166">'+p2.best+'</b><br>'+
 '<span style="font-size:10px;color:#7ef9ff">🧬 Эволюция: <b>'+(mb[0]||0)+'</b> | 🧴 Римма: <b>'+(mb[1]||0)+'</b> | 🧪 Кислота: <b>'+(mb[2]||0)+'</b><br>'+
 '👹 Боссы: <b>'+(mb[3]||0)+'</b> | ⚔️ Дуэль: <b>'+(mb[4]||0)+'</b> | 🍕 Столовая: <b>'+(mb[5]||0)+'</b></span><br>'+
-'⏱️ Время в игре: <b style="color:#00f5d4">'+fmtPlayTime(p2.playSec)+'</b> | 🧬 ДНК: <b style="color:#e0aaff">'+Math.round(p2.dna||0)+'</b> | 🏆 <b>'+p2.ach+'/130</b><br>'+
-'🏰 Башен TD: <b>'+(p2.tw||1)+'/62</b> | 🎖️ Мастеров (10 ур.): <b style="color:#ffd166">'+m10Cnt+'</b> | 🌊 Волна: <b>'+p2.wv+'</b><br>'+
+'⏱️ Время в игре: <b style="color:#00f5d4">'+fmtPlayTime(p2.playSec)+'</b> | 🧬 ДНК: <b style="color:#e0aaff">'+Math.round(p2.dna||0)+'</b> | 🩸 <b>'+(p2.hcGems||0)+'</b><br>'+
+'🏆 Трофеи: <b>'+p2.ach+'/130</b> | 🏰 Башен TD: <b>'+(p2.tw||1)+'/67</b> | 🎖️ Мастеров: <b style="color:#ffd166">'+m10Cnt+'</b> | 🌊 <b>'+p2.wv+'</b><br>'+
 '🔫 Дуэль-залп: <b>'+(1+(p2.duelBul||0))+'/5</b> | 🎯 Наведение: <b>'+(p2.duelAim?'✅':'❌')+'</b> | 🦠 Съедено: <b>'+(p2.eaten||0)+'</b></div>'+
 '<div class="aitem"><b>🧬 Экипировка и Спутники:</b><br>'+
 '🎨 Скин клетки: <b style="color:'+skObj.m+'">'+skObj.n+'</b><br>'+
@@ -1737,16 +1733,12 @@ if(!Array.isArray(d.tdOwn))d.tdOwn=Object.assign(Array(70).fill(0),d.tdOwn||{});
 while(d.tdOwn.length<70)d.tdOwn.push(0);
 if(pr==='tw_all'){d.tdOwn=d.tdOwn.map(()=>1);showNot('✅ Выданы все 70 башен TD!','#ffd166',120,0)}
 else if(pr==='tw_misha'){d.tdOwn[64]=1;showNot('🧯 Выдан эксклюзив: Миша Моисеев!','#ef4444',120,0)}
-else if(pr==='tw_eng'){d.tdOwn[65]=1;showNot('🛠️ Выдан эксклюзив: Артём!','#f59e0b',120,0)}
-else if(pr==='tw_brawl'){d.tdOwn[66]=1;showNot('🥊 Выдан эксклюзив: Саша!','#38bdf8',120,0)}
-else if(pr==='tw_necro'){d.tdOwn[67]=1;showNot('💀 Выдан эксклюзив: Матвей!','#10b981',120,0)}
-else if(pr==='tw_hack'){d.tdOwn[68]=1;showNot('💻 Выдан эксклюзив: Вероника!','#00f5d4',120,0)}
-else if(pr==='tw_accel'){d.tdOwn[69]=1;showNot('⚡ Выдан эксклюзив: Даня!','#38bdf8',120,0)}
 else if(pr==='tw_archon'){d.tdOwn.fill(1,31,33);showNot('👑 Выданы башни Архонта!','#f43f5e',120,0)}
+else if(pr==='hc_gems'){d.hcGems=(d.hcGems||0)+5000;showNot('🩸 Выдано +5000 Мутаген-Кристаллов!','#f43f5e',120,0)}
 else if(pr==='tw_one'){let id=parseInt(prompt('ID башни (0-69):','69'));if(id>=0&&id<=69){d.tdOwn[id]=1;showNot('✅ Башня #'+id+' выдана!','#38bdf8',120,0)}}
-else if(pr==='mast_all'){if(!d.tdMast)d.tdMast={};if(!d.tdSkOwn)d.tdSkOwn={};for(let i=0;i<65;i++){d.tdMast[i]=150000;d.tdSkOwn['m10_'+i]=1}showNot('🎖️ Выдан 10 ранг Мастерства + скины всем 65 башням!','#f59e0b',140,0)}
-else if(pr==='mast_one'){let id=parseInt(prompt('ID башни для мастерства (0-64):','64'));if(id>=0&&id<=64){let rnk=Math.max(1,Math.min(10,parseInt(prompt('Какой ранг мастерства выдать (1-10)?','10'))||10));if(!d.tdMast)d.tdMast={};d.tdMast[id]=MAST_REQ.at(rnk-1);if(rnk>=10){if(!d.tdSkOwn)d.tdSkOwn={};d.tdSkOwn['m10_'+id]=1}showNot('🎖️ Башне #'+id+' выдан '+rnk+' ранг Мастерства!','#fbbf24',140,0)}}
-else if(pr==='td_skins'){if(!d.tdSkOwn)d.tdSkOwn={};for(let k in TD_SKINS)TD_SKINS[k].forEach(s=>d.tdSkOwn[s.id]=1);for(let i=0;i<65;i++)d.tdSkOwn['m10_'+i]=1;showNot('🎨 Открыты ВСЕ скины башен (включая 10 ранг)!','#e879f9',140,0)}
+else if(pr==='mast_all'){if(!d.tdMast)d.tdMast={};if(!d.tdSkOwn)d.tdSkOwn={};for(let i=0;i<70;i++){d.tdMast[i]=150000;d.tdSkOwn['m10_'+i]=1}showNot('🎖️ Выдан 10 ранг Мастерства + скины всем 70 башням!','#f59e0b',140,0)}
+else if(pr==='mast_one'){let id=parseInt(prompt('ID башни для мастерства (0-69):','69'));if(id>=0&&id<=69){let rnk=Math.max(1,Math.min(10,parseInt(prompt('Какой ранг мастерства выдать (1-10)?','10'))||10));if(!d.tdMast)d.tdMast={};d.tdMast[id]=MAST_REQ.at(rnk-1);if(rnk>=10){if(!d.tdSkOwn)d.tdSkOwn={};d.tdSkOwn['m10_'+id]=1}showNot('🎖️ Башне #'+id+' выдан '+rnk+' ранг Мастерства!','#fbbf24',140,0)}}
+else if(pr==='td_skins'){if(!d.tdSkOwn)d.tdSkOwn={};for(let k in TD_SKINS)TD_SKINS[k].forEach(s=>d.tdSkOwn[s.id]=1);for(let i=0;i<70;i++)d.tdSkOwn['m10_'+i]=1;showNot('🎨 Открыты ВСЕ скины башен (включая 10 ранг)!','#e879f9',140,0)}
 else if(pr==='max_upg'){d.spd=5;d.eng=5;d.mag=5;d.duelBul=4;d.duelAim=1;d.ownSk=Array.of(1,1,1,1,1,1,1,1,1);showNot('⚡ Все прокачки клетки, дуэль и скины на МАКС!','#4ade80',140,0)}
 else if(pr==='wipe_acc'){if(!confirm('Точно сбросить весь прогресс игрока '+d.nick+'?'))return;d.dna=0;d.atp=0;d.cores=0;d.best=0;d.mBest={};d.tdOwn=DEF_TD_OWN.slice();d.tdEq=Array.of(0);d.tdMast={};d.tdSkOwn={};d.tdSkEq={};d.ownAb={};d.eqAb='';d.eqPas='';d.ownPet={};d.eqPet='';d.ach={};d.spd=0;d.eng=0;d.mag=0;d.duelBul=0;d.duelAim=0;document.getElementById('edDna').value=0;document.getElementById('edAtp').value=0;document.getElementById('edCor').value=0;document.getElementById('edBest').value=0;showNot('💣 Прогресс игрока сброшен! Нажмите Сохранить!','#ff4d6d',160,0)}
 else if(pr==='pet_all'){if(!d.ownPet)d.ownPet={};PETS.forEach(pt=>d.ownPet[pt.id]=5);d.eqPet='p_pug';showNot('🐾 Выданы все питомцы 5⭐!','#a8ff78',120,0)}
@@ -3784,7 +3776,8 @@ function getTdDetections(tp,lv,hasMic=0){
   return {hid:hid,lead:lead};
 }
 function updTdUi(){
-document.getElementById('tdWv').innerText=td.wv;document.getElementById('tdHp').innerText=td.hp;document.getElementById('tdGld').innerText=td.gold;document.getElementById('tdTwCnt').innerText=td.towers.length;
+let maxF=pvp.act?30:(td.diff===6?(td.squad===3?80:(td.squad===2?65:50)):50);
+document.getElementById('tdWv').innerText=td.wv;document.getElementById('tdHp').innerText=td.hp;document.getElementById('tdGld').innerText=td.gold;document.getElementById('tdTwCnt').innerText=td.towers.length+'/'+maxF;
 save.tdEq.forEach((twId,slot)=>{let b=document.getElementById('tdB'+slot);if(!b)return;b.classList.toggle('act',td.sel===slot);let tObj=TD_DEFS.at(twId),cnt=td.towers.filter(t=>t.tp===twId).length,full=cnt>=tObj.lim;b.innerHTML=tObj.ic+' <span style="font-size:8px;color:'+(full?'#ff4d6d':'#7ef9ff')+'">'+cnt+'/'+(tObj.lim>=99?'∞':tObj.lim)+'</span><br>'+tObj.c+'💰';b.style.opacity=full?'.55':'1'});
 let insp=document.getElementById('tdInsp');if(!td.pick){insp.style.display='none';return}
 insp.style.display='block';let tw=td.pick,df=TD_DEFS.at(tw.tp),mi2=getMastInfo(tw.tp),maxLv=tw.tp===65?6:5;
