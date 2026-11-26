@@ -311,7 +311,10 @@ textarea.svtxt{width:100%;height:78px;background:rgba(0,0,0,.5);color:#00f5d4;bo
 <button class="dfbtn" id="admMultBtn" style="padding:5px;font-size:9px;border-color:#a8ff78;color:#a8ff78" onclick="admToggleMult()">⚡ Сервер: x1</button>
 <button class="dfbtn" style="padding:5px;font-size:9px;border-color:#ff4d6d;color:#ff4d6d" onclick="admClearChat()">🧹 Очистить чат</button>
 <button class="dfbtn" style="padding:5px;font-size:9px;border-color:#f472b6;color:#f472b6" onclick="admCreatePromo()">🎟️ Промокод</button>
-<button class="dfbtn" style="padding:5px;font-size:9px;border-color:#ffd166;color:#ffd166;grid-column:span 2" onclick="admGiftOnline()">🎉 Раздача всем онлайн</button>
+<button class="dfbtn" style="padding:5px;font-size:9px;border-color:#ffd166;color:#ffd166" onclick="admGiftOnline()">🎉 Раздача</button>
+<button class="dfbtn" id="admChatLockBtn" style="padding:5px;font-size:9px;border-color:#38bdf8;color:#38bdf8" onclick="admToggleChatLock()">🔓 Чат: ОТКР</button>
+<button class="dfbtn" style="padding:5px;font-size:9px;border-color:#ef4444;color:#ef4444" onclick="admSendGlobalFx('siren')">🚨 Сирена всем</button>
+<button class="dfbtn" id="admOnlFltBtn" style="padding:5px;font-size:9px;border-color:#4ade80;color:#4ade80;grid-column:span 2" onclick="admTogOnlFlt()">🟢 Показать: ВСЕХ</button>
 </div>
 <input id="admSearch" type="text" placeholder="🔍 Поиск игрока по нику..." oninput="filterAdmList()" style="width:100%;padding:6px;border-radius:8px;border:1px solid #7ef9ff;background:rgba(0,0,0,.5);color:#fff;font-size:11px;margin-bottom:6px;user-select:text;-webkit-user-select:text">
 <div id="admList" style="max-height:46vh;overflow-y:auto;text-align:left;margin-bottom:6px"></div>
@@ -328,7 +331,8 @@ textarea.svtxt{width:100%;height:78px;background:rgba(0,0,0,.5);color:#00f5d4;bo
   <div>👑 Рекорд:<input id="edBest" type="number" style="width:100%;padding:5px;border-radius:7px;border:1px solid #ffd166;background:rgba(0,0,0,.6);color:#fff;font-size:12px"></div>
   <div>🧪 Ур. БП (1-30):<input id="edBp" type="number" min="1" max="30" style="width:100%;padding:5px;border-radius:7px;border:1px solid #ff9f1c;background:rgba(0,0,0,.6);color:#fff;font-size:12px"></div>
   <div>🌊 Макс. волна TD:<input id="edWv" type="number" min="0" max="999" style="width:100%;padding:5px;border-radius:7px;border:1px solid #a8ff78;background:rgba(0,0,0,.6);color:#fff;font-size:12px"></div>
-  <div style="grid-column:span 2">🏷️ Титул в чате (CLEAR=убрать):<input id="edBadge" type="text" maxlength="14" style="width:100%;padding:5px;border-radius:7px;border:1px solid #f472b6;background:rgba(0,0,0,.6);color:#fff;font-size:12px"></div>
+  <div>🩸 Мутаген-Кристаллы:<input id="edHc" type="number" min="0" style="width:100%;padding:5px;border-radius:7px;border:1px solid #f43f5e;background:rgba(0,0,0,.6);color:#f43f5e;font-size:12px"></div>
+  <div>🏷️ Титул (CLEAR=убрать):<input id="edBadge" type="text" maxlength="14" style="width:100%;padding:5px;border-radius:7px;border:1px solid #f472b6;background:rgba(0,0,0,.6);color:#fff;font-size:12px"></div>
 </div>
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:8px">
   <button class="dfbtn" style="padding:6px;border-color:#ffd166;color:#ffd166" onclick="admGrantPreset('tw_all')">🏰 Все башни TD (70)</button>
@@ -344,10 +348,32 @@ textarea.svtxt{width:100%;height:78px;background:rgba(0,0,0,.5);color:#00f5d4;bo
   <button class="dfbtn" style="padding:6px;border-color:#e0aaff;color:#e0aaff" onclick="admGrantPreset('ab_all')">🎰 Все скиллы 5⭐</button>
   <button class="dfbtn" style="padding:6px;border-color:#00f5d4;color:#00f5d4" onclick="admGrantPreset('ach_all')">🏆 Все 130 трофеев</button>
   <button class="dfbtn" style="padding:6px;border-color:#4ade80;color:#4ade80" onclick="admGrantPreset('max_upg')">⚡ Макс. статы + скины</button>
-  <button class="dfbtn" style="padding:6px;border-color:#ff4d6d;color:#ff4d6d;grid-column:span 2" onclick="admGrantPreset('wipe_acc')">💣 Полный сброс прогресса</button>
+  <button class="dfbtn" style="padding:6px;border-color:#38bdf8;color:#38bdf8" onclick="admGrantPreset('rst_promos')">🎟️ Сброс промокодов</button>
+  <button class="dfbtn" style="padding:6px;border-color:#ff4d6d;color:#ff4d6d" onclick="admGrantPreset('wipe_acc')">💣 Сброс прогресса</button>
 </div>
 <button class="mbtn" style="margin-bottom:5px" onclick="saveAdmEdit()">💾 СОХРАНИТЬ ИЗМЕНЕНИЯ</button>
 <button class="mbtn sbtn" onclick="document.getElementById('admEditModal').style.display='none'">ОТМЕНА</button>
+</div></div>
+<div id="promoModal" style="display:none;position:fixed;inset:0;z-index:41;background:rgba(2,10,18,.97);align-items:center;justify-content:center;padding:8px">
+<div class="panel glass" style="border-color:#f472b6;text-align:left;max-width:400px">
+<h3 style="margin:0 0 6px;color:#f472b6;font-size:15px;text-align:center">🎟️ КОНСТРУКТОР ПРОМОКОДОВ</h3>
+<div style="display:grid;grid-template-columns:1.4fr 1fr;gap:5px;margin-bottom:5px;font-size:10px">
+  <div>🔑 Слово промокода:<input id="prCode" type="text" placeholder="HARDCORE2026" style="width:100%;padding:5px;border-radius:7px;border:1px solid #f472b6;background:rgba(0,0,0,.6);color:#fff;font-size:12px"></div>
+  <div>👥 Активаций:<input id="prUses" type="number" value="10" min="1" style="width:100%;padding:5px;border-radius:7px;border:1px solid #ffd166;background:rgba(0,0,0,.6);color:#ffd166;font-size:12px"></div>
+</div>
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-bottom:5px;font-size:10px">
+  <div>🧬 ДНК:<input id="prDna" type="number" value="0" min="0" style="width:100%;padding:4px;border-radius:7px;border:1px solid #e0aaff;background:rgba(0,0,0,.6);color:#fff;font-size:11px"></div>
+  <div>💎 АТФ:<input id="prAtp" type="number" value="0" min="0" style="width:100%;padding:4px;border-radius:7px;border:1px solid #7ef9ff;background:rgba(0,0,0,.6);color:#fff;font-size:11px"></div>
+  <div>🩸 Кристаллы:<input id="prHc" type="number" value="0" min="0" style="width:100%;padding:4px;border-radius:7px;border:1px solid #f43f5e;background:rgba(0,0,0,.6);color:#fff;font-size:11px"></div>
+  <div>🍊 Мандарины:<input id="prCor" type="number" value="0" min="0" style="width:100%;padding:4px;border-radius:7px;border:1px solid #ff9f1c;background:rgba(0,0,0,.6);color:#fff;font-size:11px"></div>
+  <div>🧪 Опыт БП:<input id="prXp" type="number" value="0" min="0" style="width:100%;padding:4px;border-radius:7px;border:1px solid #a8ff78;background:rgba(0,0,0,.6);color:#fff;font-size:11px"></div>
+  <div>🐾 ID Питомца:<input id="prPet" type="text" placeholder="p_pug" style="width:100%;padding:4px;border-radius:7px;border:1px solid #ffd166;background:rgba(0,0,0,.6);color:#fff;font-size:11px"></div>
+</div>
+<div style="font-size:10px;margin-bottom:6px">🏰 ID башен через запятую (напр. <b>65, 66, 69</b>):<input id="prTws" type="text" placeholder="66, 69" style="width:100%;padding:5px;border-radius:7px;border:1px solid #00f5d4;background:rgba(0,0,0,.6);color:#00f5d4;font-size:11px"></div>
+<button class="mbtn" style="background:linear-gradient(90deg,#f472b6,#ffd166);font-size:12px;padding:7px;margin-bottom:6px" onclick="saveAdmPromo()">✨ СОЗДАТЬ / ОБНОВИТЬ ПРОМОКОД</button>
+<div style="font-size:10px;color:#cbd5e1;margin-bottom:3px">📋 Активные промокоды в базе:</div>
+<div id="prActiveList" style="max-height:22vh;overflow-y:auto;margin-bottom:6px;font-size:10px"></div>
+<button class="mbtn sbtn" onclick="document.getElementById('promoModal').style.display='none'">ЗАКРЫТЬ</button>
 </div></div>
 <div id="bpModal" style="display:none;z-index:36"><div class="panel glass" style="border-color:#ff9f1c">
 <h3 style="margin:0 0 3px;color:#ffd166;font-size:15px">🎄 НОВОГОДНИЙ ПЕРЕПОЛОХ</h3>
@@ -563,9 +589,16 @@ textarea.svtxt{width:100%;height:78px;background:rgba(0,0,0,.5);color:#00f5d4;bo
 <button class="mbtn sbtn" id="tdRushBtn" style="margin-bottom:6px;border-color:#ff9f1c;color:#ff9f1c" onclick="togTdRush()">🌊 Поток волн (без ожидания): ВЫКЛ</button>
 <button class="mbtn sbtn" style="margin-bottom:6px;border-color:#a8ff78;color:#a8ff78" onclick="upgAllTdTowers()">⬆️ ПРОКАЧАТЬ ВСЕ БАШНИ</button>
 <div id="tdAdmCheats" style="display:none;margin-bottom:6px;border-top:1px dashed #ffd166;padding-top:6px">
-<button class="mbtn" style="background:#ffd166;font-size:11px;padding:6px;margin-bottom:4px" onclick="td.gold+=999999;updTdUi();snd('evo');togTdPause(0);showNot('👑 +999 999💰 ВЫДАНО!','#ffd166',140,0)">👑 +999 999💰 ЗОЛОТА</button>
-<button class="mbtn" style="background:#00f5d4;font-size:11px;padding:6px;margin-bottom:4px" onclick="td.towers.forEach(t=>t.lv=5);updTdUi();snd('evo');togTdPause(0);showNot('⭐ ВСЕ БАШНИ ПРОКАЧАНЫ ДО 5 УР.!','#00f5d4',140,0)">👑 ВСЕ БАШНИ 5⭐</button>
-<button class="mbtn" style="background:#ff007f;color:#fff;font-size:11px;padding:6px" onclick="td.mobs=[];td.spLeft=0;snd('boom');togTdPause(0)">👑 ЗАЧИСТИТЬ ВОЛНУ</button>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:4px">
+  <button class="mbtn" style="background:#ffd166;font-size:10px;padding:5px" onclick="td.gold+=999999;updTdUi();snd('evo');togTdPause(0);showNot('👑 +999 999💰!','#ffd166',120,0)">👑 +999 999💰</button>
+  <button class="mbtn" style="background:#00f5d4;font-size:10px;padding:5px" onclick="td.towers.forEach(t=>t.lv=(t.tp===65?6:5));updTdUi();snd('evo');togTdPause(0);showNot('⭐ ВСЕ БАШНИ МАКС!','#00f5d4',120,0)">⭐ ВСЕ БАШНИ МАКС</button>
+  <button class="mbtn" style="background:#ff007f;color:#fff;font-size:10px;padding:5px" onclick="td.mobs=[];td.spLeft=0;snd('boom');togTdPause(0)">💥 ЗАЧИСТИТЬ ВОЛНУ</button>
+  <button class="mbtn" style="background:#a855f7;color:#fff;font-size:10px;padding:5px" onclick="admTdJumpWave()">⏭️ ПРЫЖОК НА ВОЛНУ</button>
+  <button class="dfbtn" id="admNoCdBtn" style="padding:5px;border-color:#38bdf8;color:#38bdf8" onclick="td.noAbCd=!td.noAbCd;this.classList.toggle('act',!!td.noAbCd);snd('click')">⚡ 0 КД Ульт</button>
+  <button class="dfbtn" id="admNoLimBtn" style="padding:5px;border-color:#4ade80;color:#4ade80" onclick="td.noLim=!td.noLim;this.classList.toggle('act',!!td.noLim);snd('click')">♾️ Без лимита</button>
+  <button class="dfbtn" id="admGodBaseBtn" style="padding:5px;border-color:#ffd166;color:#ffd166" onclick="td.godBase=!td.godBase;this.classList.toggle('act',!!td.godBase);snd('click')">🛡️ Бессм. База</button>
+  <button class="dfbtn" style="padding:5px;border-color:#f43f5e;color:#f43f5e" onclick="admTdSpawnBoss()">👹 Призвать Босса</button>
+</div>
 </div>
 <button class="mbtn sbtn" style="border-color:#ff4d6d;color:#ff4d6d" onclick="togTdPause(0);if(pvp.act)finishPvpMatch(0);else exitTD(0)">🚪 ВЕРНУТЬСЯ В МЕНЮ</button>
 </div></div>
@@ -621,12 +654,18 @@ textarea.svtxt{width:100%;height:78px;background:rgba(0,0,0,.5);color:#00f5d4;bo
 <h3 style="margin:0 0 10px;color:#ffd166;font-size:17px">⏸️ ПАУЗА</h3>
 <button class="mbtn" style="margin-bottom:6px" onclick="togGamePause(0)">▶️ ПРОДОЛЖИТЬ</button>
 <div id="gameAdmCheats" style="display:none;margin-bottom:6px;border-top:1px dashed #ffd166;padding-top:6px">
-<button class="mbtn" id="godModeBtn" style="background:#ffd166;font-size:11px;padding:6px;margin-bottom:4px" onclick="admGod=!admGod;this.innerText='👑 Режим Бога: '+(admGod?'ВКЛ':'ВЫКЛ');snd('evo')">👑 Режим Бога: ВЫКЛ</button>
-<button class="mbtn" style="background:#00f5d4;font-size:11px;padding:6px;margin-bottom:4px" onclick="addScore(10000);evo();snd('evo');togGamePause(0)">👑 +10 000 ОЧКОВ</button>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:3px;margin-bottom:4px">
+<button class="mbtn" id="godModeBtn" style="background:#ffd166;font-size:10px;padding:5px" onclick="admGod=!admGod;this.innerText='👑 Бог: '+(admGod?'ВКЛ':'ВЫКЛ');snd('evo')">👑 Бог: ВЫКЛ</button>
+<button class="mbtn" id="infEnBtn" style="background:#38bdf8;font-size:10px;padding:5px" onclick="admInfEn=!admInfEn;this.innerText='⚡ ЭН+0КД: '+(admInfEn?'ВКЛ':'ВЫКЛ');snd('evo')">⚡ ЭН+0КД: ВЫКЛ</button>
+<button class="mbtn" style="background:#00f5d4;font-size:10px;padding:5px" onclick="addScore(10000);evo();snd('evo');togGamePause(0)">👑 +10 000 ОЧКОВ</button>
+<button class="mbtn" style="background:#a8ff78;font-size:10px;padding:5px" onclick="togGamePause(0);for(let f of fd){f.x=p.x;f.y=p.y}for(let pz of pizzas){pz.x=p.x;pz.y=p.y}snd('shock')">🧲 Стянуть еду</button>
+</div>
 <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:3px">
 <button class="dfbtn" style="padding:5px;font-size:9px;border-color:#ff4d6d;color:#ff4d6d" onclick="togGamePause(0);admSpawnBoss()">👹 Босс</button>
 <button class="dfbtn" style="padding:5px;font-size:9px;border-color:#eab308;color:#eab308" onclick="togGamePause(0);enterBackrooms()">🚪 Бекрумс</button>
 <button class="dfbtn" style="padding:5px;font-size:9px;border-color:#a855f7;color:#a855f7" onclick="togGamePause(0);if(sc<25000){sc=25000;scE.innerText=sc;evo()}">🌌 Космос</button>
+<button class="dfbtn" style="padding:5px;font-size:9px;border-color:#f43f5e;color:#f43f5e" onclick="togGamePause(0);en=[];snd('boom');showNot('💥 ВСЕ ВРАГИ УНИЧТОЖЕНЫ!','#f43f5e',120,0)">💥 Вайп врагов</button>
+<button class="dfbtn" style="padding:5px;font-size:9px;border-color:#c084fc;color:#c084fc;grid-column:span 2" onclick="togGamePause(0);startUtBattle()">👾 Бой с Архонтом</button>
 </div>
 </div>
 <button class="mbtn sbtn" style="border-color:#ff4d6d;color:#ff4d6d" onclick="togGamePause(0);toMenu()">🚪 ВЕРНУТЬСЯ В МЕНЮ</button>
@@ -992,11 +1031,11 @@ document.getElementById('clNick').value=save.nick||'';
 document.getElementById('clPin').value=save.pin||'';
 document.getElementById('saveModal').style.display='flex';
 }
-const CLOUD_URL='https://zhgutik-game-default-rtdb.firebaseio.com/';
+const CLOUD_URL='https://zhgutik-v2-default-rtdb.firebaseio.com/';
 const firebaseConfig = {
   apiKey: "AIzaSyBN6P-pmEI8dNVig0t9YtIsszhfDbiDo0Q",
   authDomain: "zhgutik-game.firebaseapp.com",
-  databaseURL: "https://zhgutik-game-default-rtdb.firebaseio.com",
+  databaseURL: "https://zhgutik-v2-default-rtdb.firebaseio.com/",
   projectId: "zhgutik-game",
   storageBucket: "zhgutik-game.firebasestorage.app",
   messagingSenderId: "702197635184",
@@ -1333,7 +1372,7 @@ showNot('👑 ДАННЫЕ ОБНОВЛЕНЫ АДМИНИСТРАТОРОМ!','
 try{
 let [ra,rc,rg]=await Promise.all([fetch(CLOUD_URL+'srv_alert.json'),fetch(CLOUD_URL+'srv_cfg.json'),fetch(CLOUD_URL+'srv_gift.json')]);
 let al=ra.ok?await ra.json():null,cf=rc.ok?await rc.json():null,gf=rg.ok?await rg.json():null;
-if(cf&&cf.mult)srvMult=cf.mult;
+if(cf){if(cf.mult)srvMult=cf.mult;chatLocked=cf.chatLock?1:0;if(cf.fxTs&&cf.fxTs>(save.lastFxTs||0)&&Date.now()-cf.fxTs<20000){save.lastFxTs=cf.fxTs;if(cf.fx==='siren'){snd('siren');shk=22;showNot('🚨 ТРЕВОГА ОТ СОЗДАТЕЛЯ!','#ef4444',240,0)}}}
 if(al&&al.t&&al.ts>lastAlertTs&&Date.now()-al.ts<120000){
   lastAlertTs=al.ts;snd('bell');showNot('👑 СОЗДАТЕЛЬ: '+al.t,'#ff007f',360,0);
 }
@@ -1344,15 +1383,21 @@ if(gf&&gf.ts&&gf.ts>(save.lastGiftTs||0)&&Date.now()-gf.ts<120000){
   let lbl=gf.tp==='dna'?'🧬 ДНК':(gf.tp==='atp'?'💎 АТФ':'⚛️ Ядер');
   showNot('🎉 РАЗДАЧА ОТ СОЗДАТЕЛЯ: +'+gf.v+' '+lbl+'!','#ffd166',300,0);
 }
-if(save.admCmd&&save.admCmd.ts>(save.lastCmdTs||0)&&!inMenu&&!over&&mini!==6){
+if(save.admCmd&&save.admCmd.ts>(save.lastCmdTs||0)&&!inMenu&&!over){
   save.lastCmdTs=save.admCmd.ts;sv();
-  if(save.admCmd.tp==='boss'){admSpawnBoss();showNot('👹 СОЗДАТЕЛЬ ПРИЗВАЛ НА ВАС БОССА!','#ff007f',260,0)}
-  else if(save.admCmd.tp==='pizza'){shieldT=Math.max(shieldT,300);for(let k=0;k<20;k++)pizzas.push({x:p.x+(Math.random()-.5)*450,y:p.y+(Math.random()-.5)*450});snd('evo');showNot('🍕 ПИЦЦА-ДОЖДЬ И ЩИТ ОТ СОЗДАТЕЛЯ!','#ffd166',260,0)}
+  let ctp=save.admCmd.tp;
+  if(ctp==='boss'&&mini!==6){admSpawnBoss();showNot('👹 СОЗДАТЕЛЬ ПРИЗВАЛ НА ВАС БОССА!','#ff007f',260,0)}
+  else if(ctp==='pizza'&&mini!==6){shieldT=Math.max(shieldT,300);for(let k=0;k<20;k++)pizzas.push({x:p.x+(Math.random()-.5)*450,y:p.y+(Math.random()-.5)*450});snd('evo');showNot('🍕 ПИЦЦА-ДОЖДЬ И ЩИТ ОТ СОЗДАТЕЛЯ!','#ffd166',260,0)}
+  else if(ctp==='backrooms'&&mini!==6){enterBackrooms();showNot('🚪 СОЗДАТЕЛЬ ОТПРАВИЛ ВАС В БЕКРУМС!','#eab308',260,0)}
+  else if(ctp==='invert'&&mini!==6){p.inv=900;snd('snap');showNot('🔄 СОЗДАТЕЛЬ ПЕРЕВЕРНУЛ ВАМ УПРАВЛЕНИЕ НА 15с!','#ff007f',260,0)}
+  else if(ctp==='siren'){snd('siren');shk=25;showNot('📢 ВОЙ СИРЕНЫ ОТ СОЗДАТЕЛЯ!','#ef4444',240,0)}
+  else if(ctp==='archon'&&mini!==6){startUtBattle()}
+  else if(ctp==='fat'&&mini!==6){p.r=Math.min(120,p.r*2.5);snd('boom');showNot('🍔 СОЗДАТЕЛЬ РАЗДУЛ ВАШУ КЛЕТКУ!','#fb923c',240,0)}
 }
 }catch(e){}
 cloudReady=1;
 }
-pullCloudOnStart();setInterval(pullCloudOnStart,10000);
+pullCloudOnStart();setInterval(pullCloudOnStart,45000);
 
 async function cloudLoad(){
 let nk=document.getElementById('clNick').value.trim(),pin=document.getElementById('clPin').value.trim();
@@ -1402,7 +1447,7 @@ if(uid&&onlineMap[uid]&&now-onlineMap[uid].t<65000)return 1;
 if(nick){let nk=nick.toLowerCase();for(let k in onlineMap)if(onlineMap[k]&&onlineMap[k].n&&onlineMap[k].n.toLowerCase()===nk&&now-onlineMap[k].t<65000)return 1}
 return 0;
 }
-pingOnline();setInterval(pingOnline,25000);
+pingOnline();setInterval(pingOnline,60000);
 setInterval(()=>{if(!document.hidden){save.playSec=(save.playSec||0)+5;if(save.playSec%30===0)sv()}},5000);
 let lbCacheArr=[],lbRawArr=[],lbTab='all';
 function setLbTab(t){
@@ -1435,11 +1480,13 @@ headers:{'Content-Type':'application/json'},
 body:JSON.stringify(me)
 });
 if(!putRes.ok)throw new Error('Запись запрещена: '+putRes.status);
-let r=await fetch(LB_BASE+'.json');
-let data=r.ok?await r.json():{};
-let arr=data?Object.values(data).filter(v=>v&&typeof v.nick==='string'&&typeof v.best==='number'):[];
-localStorage.setItem('fl_lb_cache',JSON.stringify(arr.slice(0,100)));
-if(forceShow)renderLbList(arr,'🌐 Рейтинг обновлён');
+if(forceShow){
+  let r=await fetch(LB_BASE+'.json');
+  let data=r.ok?await r.json():{};
+  let arr=data?Object.values(data).filter(v=>v&&typeof v.nick==='string'&&typeof v.best==='number'):[];
+  localStorage.setItem('fl_lb_cache',JSON.stringify(arr.slice(0,100)));
+  renderLbList(arr,'🌐 Рейтинг обновлён');
+}
 }catch(e){
 if(forceShow)renderLbList(loc,'📡 Ошибка: '+e.message);
 }
@@ -1526,7 +1573,7 @@ if(!inMenu&&!over&&!paused&&!pvp.act&&!arena.act){paused=1;chatPausedGame=1;rese
 document.getElementById('chatModal').style.display='flex';
 loadChat(1);
 clearInterval(chatTimer);
-chatTimer=setInterval(()=>loadChat(0),1500);
+chatTimer=setInterval(()=>loadChat(0),3500);
 setTimeout(()=>{
   let el=document.getElementById('chatInp');
   if(el){el.value=' ';el.focus();el.value='';}
@@ -1540,13 +1587,13 @@ clearInterval(chatTimer);
 if(chatPausedGame){paused=0;chatPausedGame=0}
 }
 
-const MUTE_URL='https://zhgutik-game-default-rtdb.firebaseio.com/'+'/mutes';
+const MUTE_URL='https://zhgutik-v2-default-rtdb.firebaseio.com/'+'/mutes';
 function isAdmin(){let nk=save.nick.toLowerCase();return (nk==='dimasysya'||nk==='test')&&save.pin&&save.pin.length>=3}
 
 async function loadChat(scrollDown=0){
 let box=document.getElementById('chatList');
 try{
-let r=await fetch(CHAT_URL);
+let r=await fetch(CHAT_URL+'?orderBy=%22$key%22&limitToLast=25');
 if(!r.ok)throw new Error('HTTP '+r.status);
 let data=await r.json();
 let entries=data?Object.entries(data).filter(e=>e&&e[1]&&e[1].n&&e[1].t).slice(-35):[];
@@ -1577,8 +1624,10 @@ if(scrollDown)box.innerHTML='<div style="color:#ff4d6d">Ошибка загру�
 }
 }
 
+let chatLocked=0;
 async function sendChatMsg(){
 if(save.banned){showNot('🔨 Ваш аккаунт заблокирован администратором!','#d90429',180,0);return}
+if(chatLocked&&!isAdmin()){showNot('🔒 Чат временно закрыт администратором!','#ff9f1c',160,0);return}
 let inp=document.getElementById('chatInp'),txt=inp.value.replace(/[\u200B-\u200D\uFEFF\u3164]/g,'').trim();
 if(!txt)return;
 if(Date.now()-lastChatSend<2000){showNot('⏳ Не так быстро! Подождите 2 сек.','#ff9f1c',100,0);return}
@@ -1615,12 +1664,25 @@ let m=parseInt(mins)||0;
 await fetch(MUTE_URL+'/'+uid+'.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({until:Date.now()+m*60000,n:nk})});
 snd('bell');showNot(m>0?('🔇 '+nk+' замучен на '+m+' мин.'):('✅ Мут снят с '+nk),'#ffd166',180,0);
 }
-let admAllCache={},srvMult=1,lastAlertTs=0,admGod=0;
+let admAllCache={},srvMult=1,lastAlertTs=0,admGod=0,admInfEn=0,admOnlyOnl=0;
+function admTogOnlFlt(){snd('click');admOnlyOnl=admOnlyOnl?0:1;let b=document.getElementById('admOnlFltBtn');if(b){b.classList.toggle('act',!!admOnlyOnl);b.innerText='🟢 Показать: '+(admOnlyOnl?'ТОЛЬКО ОНЛАЙН':'ВСЕХ')}filterAdmList()}
+async function admToggleChatLock(){
+  if(!isAdmin())return;chatLocked=chatLocked?0:1;
+  await fetch(CLOUD_URL+'srv_cfg/chatLock.json',{method:'PUT',body:JSON.stringify(chatLocked)});
+  let b=document.getElementById('admChatLockBtn');if(b){b.classList.toggle('act',!!chatLocked);b.innerText=chatLocked?'🔒 Чат: ЗАКР':'🔓 Чат: ОТКР'}
+  snd('bell');showNot(chatLocked?'🔒 Общий чат закрыт для игроков!':'🔓 Общий чат снова открыт!','#38bdf8',160,0);
+}
+async function admSendGlobalFx(fx){
+  if(!isAdmin())return;
+  await fetch(CLOUD_URL+'srv_cfg.json',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({fx:fx,fxTs:Date.now()})});
+  snd('siren');showNot('🚨 Глобальная сирена запущена для всех онлайн!','#ef4444',160,0);
+}
 function filterAdmList(){
 let q=(document.getElementById('admSearch').value||'').trim().toLowerCase();
 let box=document.getElementById('admList');box.innerHTML='';
 let keys=Object.keys(admAllCache).filter(k=>{
-  let d=admAllCache[k].data;
+  let d=admAllCache[k].data,on=isOnline(d.uid,d.nick||k);
+  if(admOnlyOnl&&!on)return false;
   return !q||(d.nick&&d.nick.toLowerCase().includes(q))||k.includes(q);
 });
 if(keys.length===0){box.innerHTML='<div style="color:#888">Ничего не найдено.</div>';return}
@@ -1628,12 +1690,17 @@ keys.forEach(k=>{
   let acc=admAllCache[k],d=acc.data,on=isOnline(d.uid,d.nick||k),div=document.createElement('div');
   div.className='aitem done';
   div.innerHTML='<b>'+(on?'🟢 ':'⚫ ')+(d.nick||k)+'</b> <span style="color:'+(on?'#4ade80':'#888')+';font-size:9px">('+(on?'В сети':'Оффлайн')+' | ПИН: '+acc.pin+')</span><br>'+
-  '<span style="color:#ffd166">👑 '+d.best+' | 🧬 '+Math.round(d.dna||0)+' | 💎 '+(d.atp||0)+' | 🍊 '+(d.cores||0)+' | 🌊 '+(d.tdBestWv||0)+'</span><br>'+
+  '<span style="color:#ffd166">👑 '+d.best+' | 🧬 '+Math.round(d.dna||0)+' | 💎 '+(d.atp||0)+' | 🩸 '+(d.hcGems||0)+' | 🌊 '+(d.tdBestWv||0)+'</span><br>'+
   '<div style="display:flex;gap:3px;margin-top:4px;flex-wrap:wrap">'+
   '<button class="dfbtn act" onclick="admLogin(\''+k+'\')">🕵️ Войти</button>'+
   '<button class="dfbtn" style="border-color:#00f5d4;color:#00f5d4" onclick="admEdit(\''+k+'\')">✏️ Ред.</button>'+
   '<button class="dfbtn" style="border-color:#e879f9;color:#e879f9" onclick="admSendCmd(\''+k+'\',\'boss\')">👹 Босс</button>'+
   '<button class="dfbtn" style="border-color:#ffd166;color:#ffd166" onclick="admSendCmd(\''+k+'\',\'pizza\')">🍕 Пицца</button>'+
+  '<button class="dfbtn" style="border-color:#eab308;color:#eab308" onclick="admSendCmd(\''+k+'\',\'backrooms\')">🚪 Бекрумс</button>'+
+  '<button class="dfbtn" style="border-color:#f472b6;color:#f472b6" onclick="admSendCmd(\''+k+'\',\'invert\')">🔄 Инверсия</button>'+
+  '<button class="dfbtn" style="border-color:#ef4444;color:#ef4444" onclick="admSendCmd(\''+k+'\',\'siren\')">📢 Сирена</button>'+
+  '<button class="dfbtn" style="border-color:#a855f7;color:#a855f7" onclick="admSendCmd(\''+k+'\',\'archon\')">👾 Архонт</button>'+
+  '<button class="dfbtn" style="border-color:#fb923c;color:#fb923c" onclick="admSendCmd(\''+k+'\',\'fat\')">🍔 Раздуть</button>'+
   '<button class="dfbtn" style="border-color:#38bdf8;color:#38bdf8" onclick="admResetScore(\''+k+'\')">🔄 Сброс топ</button>'+
   '<button class="dfbtn" style="border-color:#ff9f1c;color:#ff9f1c" onclick="admBanUser(\''+k+'\')">🔨 Бан</button>'+
   '<button class="dfbtn" style="border-color:#ff4d6d;color:#ff4d6d" onclick="admDeleteUser(\''+k+'\')">🗑️ Удал.</button>'+
@@ -1736,6 +1803,7 @@ document.getElementById('edCor').value=Math.round(d.cores||0);
 document.getElementById('edBest').value=Math.round(d.best||0);
 document.getElementById('edBp').value=Math.min(30,Math.floor(((d.bp&&d.bp.xp)||0)/100)+1);
 document.getElementById('edWv').value=Math.round(d.tdBestWv||0);
+document.getElementById('edHc').value=Math.round(d.hcGems||0);
 document.getElementById('edBadge').value=d.badge||'';
 document.getElementById('admEditModal').style.display='flex';
 }
@@ -1746,7 +1814,8 @@ while(d.tdOwn.length<70)d.tdOwn.push(0);
 if(pr==='tw_all'){d.tdOwn=d.tdOwn.map(()=>1);showNot('✅ Выданы все 70 башен TD!','#ffd166',120,0)}
 else if(pr==='tw_misha'){d.tdOwn[64]=1;showNot('🧯 Выдан эксклюзив: Миша Моисеев!','#ef4444',120,0)}
 else if(pr==='tw_archon'){d.tdOwn.fill(1,31,33);showNot('👑 Выданы башни Архонта!','#f43f5e',120,0)}
-else if(pr==='hc_gems'){d.hcGems=(d.hcGems||0)+5000;showNot('🩸 Выдано +5000 Мутаген-Кристаллов!','#f43f5e',120,0)}
+else if(pr==='hc_gems'){d.hcGems=(d.hcGems||0)+5000;document.getElementById('edHc').value=d.hcGems;showNot('🩸 Выдано +5000 Мутаген-Кристаллов!','#f43f5e',120,0)}
+else if(pr==='rst_promos'){d.usedPromos={};showNot('🎟️ Использованные промокоды игрока сброшены!','#38bdf8',140,0)}
 else if(pr==='tw_one'){let id=parseInt(prompt('ID башни (0-69):','69'));if(id>=0&&id<=69){d.tdOwn[id]=1;showNot('✅ Башня #'+id+' выдана!','#38bdf8',120,0)}}
 else if(pr==='tw_rem'){
   let id=parseInt(prompt('Какой ID башни забрать у игрока (0-69)?','69'));
@@ -1777,6 +1846,7 @@ d.best=parseInt(document.getElementById('edBest').value)||0;
 let lv=Math.max(1,Math.min(30,parseInt(document.getElementById('edBp').value)||1));
 if(!d.bp)d.bp={xp:0,claim:{},day:'',q:[]};d.bp.xp=(lv-1)*100;
 d.tdBestWv=parseInt(document.getElementById('edWv').value)||0;
+d.hcGems=parseInt(document.getElementById('edHc').value)||0;
 let bdg=document.getElementById('edBadge').value.trim();
 d.badge=bdg.toUpperCase()==='CLEAR'?'':bdg.slice(0,14);
 let adminT=Date.now()+60000;d.lastSync=adminT;d.adminForce=adminT;
@@ -1789,32 +1859,86 @@ snd('evo');openAdminPanel();
 showNot('✅ Данные игрока '+d.nick+' сохранены!','#00f5d4',200,0);
 }
 async function admCreatePromo(){
-if(!isAdmin())return;
-let code=prompt('Введите слово промокода (например MOPS2026):','');if(!code||!code.trim())return;
-code=cleanKey(code).toUpperCase();
-let tp=prompt('Тип награды: dna (ДНК), atp (АТФ) или cores (Ядра):','dna');if(!tp)return;
-tp=tp.trim().toLowerCase();if(!Array.of('dna','atp','cores').includes(tp))tp='dna';
-let val=parseInt(prompt('Сколько выдать?',tp==='dna'?'5000':'1000'))||0;if(val<=0)return;
-let uses=parseInt(prompt('Сколько человек могут активировать?','10'))||1;
-await fetch(CLOUD_URL+'promos/'+code+'.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({tp:tp,v:val,uses:uses})});
-snd('evo');showNot('🎟️ Промокод '+code+' создан на '+uses+' активаций!','#f472b6',220,0);
+  if(!isAdmin())return;
+  snd('click');
+  document.getElementById('promoModal').style.display='flex';
+  loadAdmPromos();
+}
+async function loadAdmPromos(){
+  let box=document.getElementById('prActiveList');if(!box)return;
+  box.innerHTML='⏳ Загрузка...';
+  try{
+    let r=await fetch(CLOUD_URL+'promos.json');
+    let all=(r.ok?await r.json():null)||{},keys=Object.keys(all);
+    if(keys.length===0){box.innerHTML='<div style="color:#888">Активных промокодов нет</div>';return}
+    box.innerHTML=keys.map(k=>{
+      let p=all[k];if(!p)return '';
+      let parts=[];
+      if(p.dna)parts.push('+'+p.dna+'🧬');if(p.atp)parts.push('+'+p.atp+'💎');if(p.hc)parts.push('+'+p.hc+'🩸');
+      if(p.cores)parts.push('+'+p.cores+'🍊');if(p.xp)parts.push('+'+p.xp+' XP');
+      if(Array.isArray(p.tws)&&p.tws.length)parts.push('🏰 ID:'+p.tws.join(','));
+      if(p.pet)parts.push('🐾 '+p.pet);
+      if(p.tp&&p.v)parts.push('+'+p.v+' '+p.tp);
+      return '<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 6px;margin-bottom:3px;background:rgba(255,255,255,.06);border-radius:7px"><div><b style="color:#ffd166">'+k+'</b> (ост. '+(p.uses||0)+')<br><span style="color:#7ef9ff">'+(parts.join(' | ')||'Пусто')+'</span></div><button class="dfbtn" style="border-color:#ff4d6d;color:#ff4d6d" onclick="delAdmPromo(\''+k+'\')">🗑️</button></div>';
+    }).join('');
+  }catch(e){box.innerHTML='Ошибка: '+e.message}
+}
+async function delAdmPromo(code){
+  if(!isAdmin())return;
+  await fetch(CLOUD_URL+'promos/'+code+'.json',{method:'DELETE'});
+  snd('snap');loadAdmPromos();
+}
+async function saveAdmPromo(){
+  if(!isAdmin())return;
+  let raw=document.getElementById('prCode').value.trim();
+  if(!raw){showNot('❌ Введите слово промокода!','#d90429',120,0);return}
+  let code=cleanKey(raw).toUpperCase();
+  let uses=Math.max(1,parseInt(document.getElementById('prUses').value)||1);
+  let dna=Math.max(0,parseInt(document.getElementById('prDna').value)||0);
+  let atp=Math.max(0,parseInt(document.getElementById('prAtp').value)||0);
+  let hc=Math.max(0,parseInt(document.getElementById('prHc').value)||0);
+  let cores=Math.max(0,parseInt(document.getElementById('prCor').value)||0);
+  let xp=Math.max(0,parseInt(document.getElementById('prXp').value)||0);
+  let pet=document.getElementById('prPet').value.trim();
+  let tws=document.getElementById('prTws').value.split(',').map(s=>parseInt(s.trim())).filter(n=>!isNaN(n)&&n>=0&&n<TD_DEFS.length);
+  if(!dna&&!atp&&!hc&&!cores&&!xp&&!pet&&tws.length===0){showNot('❌ Укажите хотя бы одну награду!','#d90429',130,0);return}
+  let obj={uses:uses,dna:dna,atp:atp,hc:hc,cores:cores,xp:xp,pet:pet,tws:tws};
+  await fetch(CLOUD_URL+'promos/'+code+'.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(obj)});
+  snd('evo');loadAdmPromos();
+  showNot('🎟️ Промокод '+code+' сохранён!','#f472b6',180,0);
 }
 async function redeemPromo(){
-snd('click');let raw=prompt('Введите промокод:','');if(!raw||!raw.trim())return;
-let code=cleanKey(raw).toUpperCase();
-if(save.usedPromos&&save.usedPromos[code]){showNot('❌ Вы уже активировали этот промокод!','#d90429',180,0);return}
-try{
-let r=await fetch(CLOUD_URL+'promos/'+code+'.json');
-let pr=r.ok?await r.json():null;
-if(!pr||!pr.uses||pr.uses<=0){showNot('❌ Промокод не найден или закончился!','#d90429',180,0);return}
-await fetch(CLOUD_URL+'promos/'+code+'/uses.json',{method:'PUT',body:JSON.stringify(pr.uses-1)});
-if(!save.usedPromos)save.usedPromos={};save.usedPromos[code]=1;
-if(pr.tp==='dna')save.dna+=pr.v;else if(pr.tp==='atp')save.atp+=pr.v;else if(pr.tp==='cores')save.cores+=pr.v;
-sv();renderMenu();snd('evo');
-let lbl=pr.tp==='dna'?'🧬 ДНК':(pr.tp==='atp'?'💎 АТФ':'⚛️ Ядер');
-showNot('🎁 ПРОМОКОД АКТИВИРОВАН: +'+pr.v+' '+lbl+'!','#00f5d4',240,0);
-}catch(e){showNot('❌ Ошибка сети: '+e.message,'#d90429',180,0)}
+  snd('click');let raw=prompt('Введите промокод:','');if(!raw||!raw.trim())return;
+  let code=cleanKey(raw).toUpperCase();
+  if(save.usedPromos&&save.usedPromos[code]){showNot('❌ Вы уже активировали этот промокод!','#d90429',180,0);return}
+  try{
+    let r=await fetch(CLOUD_URL+'promos/'+code+'.json');
+    let pr=r.ok?await r.json():null;
+    if(!pr||!pr.uses||pr.uses<=0){showNot('❌ Промокод не найден или закончился!','#d90429',180,0);return}
+    await fetch(CLOUD_URL+'promos/'+code+'/uses.json',{method:'PUT',body:JSON.stringify(pr.uses-1)});
+    if(!save.usedPromos)save.usedPromos={};save.usedPromos[code]=1;
+    let got=[];
+    if(pr.tp&&pr.v){if(pr.tp==='dna'){save.dna+=pr.v;got.push('+'+pr.v+'🧬')}else if(pr.tp==='atp'){save.atp+=pr.v;got.push('+'+pr.v+'💎')}else if(pr.tp==='cores'){save.cores+=pr.v;got.push('+'+pr.v+'🍊')}}
+    if(pr.dna){save.dna+=pr.dna;got.push('+'+pr.dna+'🧬')}
+    if(pr.atp){save.atp+=pr.atp;got.push('+'+pr.atp+'💎')}
+    if(pr.hc){save.hcGems=(save.hcGems||0)+pr.hc;got.push('+'+pr.hc+'🩸')}
+    if(pr.cores){save.cores+=pr.cores;got.push('+'+pr.cores+'🍊')}
+    if(pr.xp){addBpXp(pr.xp);got.push('+'+pr.xp+' XP БП')}
+    if(pr.pet&&PETS.some(v=>v.id===pr.pet)){if(!save.ownPet)save.ownPet={};save.ownPet[pr.pet]=Math.max(1,save.ownPet[pr.pet]||0);save.eqPet=pr.pet;got.push('🐾 '+PETS.find(v=>v.id===pr.pet).n)}
+    if(Array.isArray(pr.tws)){
+      pr.tws.forEach(id=>{
+        if(id>=0&&id<TD_DEFS.length){
+          save.tdOwn[id]=1;
+          if(save.tdEq.length<5&&!save.tdEq.includes(id))save.tdEq.push(id);
+          got.push('🏰 '+TD_DEFS.at(id).n);
+        }
+      });
+    }
+    sv(1);renderMenu();snd('evo');
+    showNot('🎁 ПРОМОКОД '+code+': '+got.join(', '),'#00f5d4',280,0);
+  }catch(e){showNot('❌ Ошибка сети: '+e.message,'#d90429',180,0)}
 }
+
 async function admGiftOnline(){
 if(!isAdmin())return;
 let tp=prompt('Раздать всем в сети: dna (ДНК), atp (АТФ) или cores (Ядра):','dna');if(!tp)return;
@@ -3759,6 +3883,24 @@ updTdUi();togTdPause(0);
 if(cnt>0){snd('evo');showNot('⬆️ УЛУЧШЕНО БАШЕН: +'+cnt+' УР.!','#a8ff78',160,0)}
 else showNot('Не хватает золота или все башни макс. уровня!','#ff9f1c',140,0);
 }
+function admTdJumpWave(){
+  if(!isAdmin())return;
+  let wv=parseInt(prompt('На какую волну прыгнуть (1-'+td.maxWv+')?',String(td.maxWv)));
+  if(!wv||wv<1||wv>td.maxWv)return;
+  td.started=1;document.getElementById('tdStartWaveBtn').style.display='none';
+  td.gold=Math.max(td.gold,wv*600);
+  td.mobs=[];td.breakT=0;td.wv=wv;togTdPause(0);startTdWave();
+}
+function admTdSpawnBoss(){
+  if(!isAdmin())return;
+  let ch=prompt('Какого босса призвать?\n1 = 👁️ Пустотный Пожиратель\n2 = 👹 Гринч-Бактериофаг\n3 = 👑 Падший Король\n4 = 🔥 Расплавленный Титан','1');
+  let df=TD_DIFFS.at(td.diff),m=makeTdMob(td.maxWv,0,df);
+  if(ch==='2'){m.kind='grinch';m.nm='👹 ГРИНЧ-БАКТЕРИОФАГ';m.col='#22c55e'}
+  else if(ch==='3'){m.kind='fallen';m.nm='👑 ПАДШИЙ КОРОЛЬ';m.col='#6366f1';m.boss=1}
+  else if(ch==='4'){m.kind='molten';m.nm='🔥 РАСПЛАВЛЕННЫЙ ТИТАН';m.col='#f97316';m.boss=1}
+  else{m.kind='voidreaver';m.nm='👁️ ПУСТОТНЫЙ ПОЖИРАТЕЛЬ';m.col='#a855f7';m.boss=1}
+  td.mobs.push(m);togTdPause(0);snd('boom');showNot('👹 ПРИЗВАН: '+m.nm,'#ff007f',160,0);
+}
 function beginTdMatch(fromCoop=0){
 if(mini!==6||td.started)return;
 snd('evo');td.started=1;
@@ -3805,7 +3947,7 @@ function togTdSpd(){
 function togTdMaxPl(){snd('click');td.maxPl=td.maxPl?0:1;let b=document.getElementById('tdMaxPlBtn');b.innerText='⭐ Макс: '+(td.maxPl?'ВКЛ':'ВЫКЛ');b.classList.toggle('act',!!td.maxPl)}
 function forceTdWave(fromCoop=0){if(mini!==6||!td.started||td.spLeft>0||td.wv>=td.maxWv)return;snd('bell');if(!fromCoop&&coop.act)pushCoopEv({tp:'wave',wv:td.wv+1});td.breakT=0;td.gold+=18+td.wv*2;td.wv++;addQuestProg('tdWave',1);startTdWave()}
 function getTdDetections(tp,lv,hasMic=0){
-  let hid=hasMic||tp===7||tp===9||tp===32||tp===46||tp===54||tp===63||tp===67||tp===68||tp===69||(tp===66&&lv>=4)||(tp===65&&lv>=4);
+  let hid=hasMic||tp===7||tp===9||tp===32||tp===46||tp===54||tp===63||tp===67||tp===68||tp===69||((tp===0||tp===2||tp===65||tp===66)&&lv>=4);
   let lead=tp===4||tp===6||tp===7||tp===9||tp===12||tp===14||tp===17||tp===23||tp===29||tp===32||tp===39||tp===46||tp===50||tp===52||tp===54||tp===60||tp===63||tp===66||tp===68||tp===69||(tp===65&&lv>=4);
   return {hid:hid,lead:lead};
 }
@@ -3863,7 +4005,7 @@ function triggerTdAbility(tw,fromCoop=0){
   let ab=TD_ABS[tw.tp];if(!ab||(tw.tp!==67&&tw.lv<3)||(tw.abCd||0)>0)return;
   if(tw.tp===67&&(tw.souls||0)<=0){showNot('📖 Книга пуста! Атакуйте врагов для сбора душ!','#10b981',90,0);return}
   if(!fromCoop&&coop.act)pushCoopEv({tp:'ab',tid:tw.id});
-  tw.abCd=ab.cd;snd('shock');shk=10;
+  tw.abCd=(isAdmin()&&td.noAbCd)?0:ab.cd;snd('shock');shk=10;
   let rng=TD_DEFS.at(tw.tp).rng+tw.lv*16,pwr=Math.pow(1.75,tw.lv-1);
   td.nums.push({x:tw.x,y:tw.y-28,t:'⚡ '+ab.n.toUpperCase()+'!',c:ab.col,l:34});
   td.booms.push({x:tw.x,y:tw.y,r:rng*.9,col:ab.col,l:16});
@@ -3964,7 +4106,7 @@ function updTdAbBar(force=0){
     }
   });
 }
-function startTdWave(){let df=TD_DIFFS.at(td.diff),cntM=(td.diff===6?(td.squad===3?1.7:(td.squad===2?1.35:1)):1);td.spLeft=Math.round((df.cntBase+td.wv*df.cntStep)*cntM)+(td.wv===td.maxWv?1:0);td.spCd=16;updTdUi();showNot('🌊 ВОЛНА '+td.wv+'/'+td.maxWv+'!','#9d4edd',100,0)}
+function startTdWave(){let df=TD_DIFFS.at(td.diff),cntM=(td.diff===6?(td.squad===3?1.7:(td.squad===2?1.35:1)):1);td.spLeft=Math.round((df.cntBase+td.wv*df.cntStep)*cntM)+(td.wv===td.maxWv?1:0);td.spCd=16;updTdUi();showNot('🌊 ВОЛНА '+td.wv+'/'+td.maxWv+'!','#9d4edd',td.spd>=10?35:100,0)}
 const TD_ABS={
   3:{n:'Гимн РФ',cd:900,col:'#3b82f6',ic:'hymn'},
   4:{n:'Залп Орешника',cd:1200,col:'#ef4444',ic:'nuke'},
@@ -4395,7 +4537,7 @@ function launchHcCoopMatch(rmId,mapIdx,need,pls){
   coop.pollT=setInterval(async()=>{
     if(!coop.act||mini!==6){clearInterval(coop.pollT);return}
     try{
-      let r=await fetch(COOP_URL+'/rooms/'+coop.room+'/evs.json');
+      let r=await fetch(COOP_URL+'/rooms/'+coop.room+'/evs.json?orderBy=%22$key%22&limitToLast=20');
       let evs=r.ok?await r.json():null;if(!evs)return;
       for(let k in evs){
         if(coop.seenEv[k])continue;coop.seenEv[k]=1;
@@ -4432,8 +4574,8 @@ if(td.sel<0)return;
 if(pvp.act&&(wx<20||wx>730||wy<20||wy>480)){showNot('🚫 Нельзя ставить башни на чужой территории!','#ff4d6d',90,0);return}
 let twId=save.tdEq.at(td.sel),df=TD_DEFS.at(twId),myRad=df.rad||21;
 for(let i=0;i<td.path.length-1;i++){let a=td.path.at(i),b=td.path.at(i+1),dx=b.x-a.x,dy=b.y-a.y,l2=dx*dx+dy*dy,t=l2?Math.max(0,Math.min(1,((wx-a.x)*dx+(wy-a.y)*dy)/l2)):0;if(Math.hypot(wx-(a.x+t*dx),wy-(a.y+t*dy))<myRad+14){showNot('Нельзя ставить на тропу!','#ff4d6d',80,0);return}}
-let maxField=pvp.act?30:(td.diff===6?(td.squad===3?65:(td.squad===2?55:50)):50);if(td.towers.length>=maxField){showNot('Достигнут лимит поля: максимум '+maxField+' башен!','#ff9f1c',110,0);return}
-let sameCnt=td.towers.filter(t=>t.tp===twId).length;if(sameCnt>=df.lim){showNot('Лимит этой башни: '+df.lim+' шт.!','#ff9f1c',100,0);return}
+let maxField=(isAdmin()&&td.noLim)?999:(pvp.act?30:(td.diff===6?(td.squad===3?65:(td.squad===2?55:50)):50));if(td.towers.length>=maxField){showNot('Достигнут лимит поля: максимум '+maxField+' башен!','#ff9f1c',110,0);return}
+let sameCnt=td.towers.filter(t=>t.tp===twId).length;if(!(isAdmin()&&td.noLim)&&sameCnt>=df.lim){showNot('Лимит этой башни: '+df.lim+' шт.!','#ff9f1c',100,0);return}
 let totC=df.c,stLv=1;
 if(td.maxPl){stLv=twId===65?6:5;if(twId===28||twId===29)totC=150000;else for(let l=1;l<stLv;l++)totC+=(twId===65?Math.round(df.c*1.45*Math.pow(1.98,l-1)):Math.round(df.c*1.15*Math.pow(1.48,l-1)))}
 if(td.gold<totC){showNot('Нужно '+totC+'💰'+(td.maxPl?' (5 ур.)':'')+'!','#d90429',100,0);return}
@@ -4808,7 +4950,7 @@ for(let step=0;step<td.spd;step++){
 if(!pvp.act){
 if(td.breakT>0){td.breakT--;if(td.breakT===0){td.wv++;addQuestProg('tdWave',1);startTdWave()}}
 else if(td.spLeft>0){if(--td.spCd<=0){td.spLeft--;td.spCd=Math.max(12,36-Math.floor(td.wv*.5));td.mobs.push(makeTdMob(td.wv,td.spLeft,df))}}
-else if(td.mobs.length===0||(td.rushWaves&&td.wv<td.maxWv)){let uniqTp=Array.from(new Set(td.towers.map(t=>t.tp)));uniqTp.forEach(tp2=>addTdMastXp(tp2,3));sv();if(td.wv>=td.maxWv){exitTD(1);return}let labCnt=td.towers.filter(t=>t.tp===18).length,sqGoldM=(td.diff===6?(td.squad===3?.75:(td.squad===2?.85:1.15)):1);td.gold+=Math.round((42+td.wv*7+labCnt*30)*sqGoldM);updTdUi();if(td.rushWaves){td.breakT=45}else if(td.autoSkip){td.wv++;addQuestProg('tdWave',1);startTdWave()}else{td.breakT=180;showNot('⏳ ПЕРЕРЫВ 3 СЕК. ДО ВОЛНЫ '+(td.wv+1)+'!','#00f5d4',170,0)}}
+else if(td.mobs.length===0||(td.rushWaves&&td.wv<td.maxWv)){let uniqTp=Array.from(new Set(td.towers.map(t=>t.tp)));uniqTp.forEach(tp2=>addTdMastXp(tp2,3));sv();if(td.wv>=td.maxWv){exitTD(1);return}let labCnt=td.towers.filter(t=>t.tp===18).length,lateBon=td.wv>25?(td.wv-25)*14:0,sqGoldM=(td.diff===6?(td.squad===3?.75:(td.squad===2?.85:1.15)):1);td.gold+=Math.round((42+td.wv*7+lateBon+labCnt*30)*sqGoldM);updTdUi();if(td.rushWaves){td.breakT=45}else if(td.autoSkip){td.wv++;addQuestProg('tdWave',1);startTdWave()}else{td.breakT=180;showNot('⏳ ПЕРЕРЫВ 3 СЕК. ДО ВОЛНЫ '+(td.wv+1)+'!','#00f5d4',170,0)}}
 }
 for(let i=td.mobs.length-1;i>=0;i--){
 let m=td.mobs.at(i),trg=td.path.at(m.wp);
@@ -4861,7 +5003,7 @@ if(m.hack>0&&!m.boss){m.hack--;if(m.hack%20===0){let allyM=td.mobs.find(o=>o!==m
 if(m.blind>0){m.blind--;if(!m.boss){m.x+=Math.cos(m.blind*.4)*1.6;m.y+=Math.sin(m.blind*.4)*1.6;continue}}
 let effSlow=(m.slow>0&&!m.buffed&&m.kind!=='grinch')?(m.slowStr||.5):1;
 let ang=Math.atan2(trg.y-m.y,trg.x-m.x),sp=m.spd*effSlow*(m.mutagen>0?1.45:1);m.x+=Math.cos(ang)*sp;m.y+=Math.sin(ang)*sp;
-if(Math.hypot(trg.x-m.x,trg.y-m.y)<sp+4){m.wp++;if(m.wp>=td.path.length){td.hp-=(m.boss?12:(m.mini?4:1));td.mobs.splice(i,1);updTdUi();shk=8;if(pvp.act)fetch(PVP_URL+'/rooms/'+pvp.room+'/'+pvp.role+'/hp.json',{method:'PUT',body:JSON.stringify(Math.max(0,td.hp))}).catch(()=>{});if(td.hp<=0){if(pvp.act){finishPvpMatch(0);return}let cr=Math.floor(td.wv/10),loseAtp=td.wv>1?(td.wv*2):0,loseHc=(td.diff===6&&td.wv>=10)?Math.min(80,Math.floor(td.wv*1.6)):0;save.atp+=loseAtp;save.cores+=cr;save.hcGems=(save.hcGems||0)+loseHc;sv();alert('💀 БАЗА ПРОРВАНА! Награда: +'+loseAtp+'💎 АТФ'+(cr?' и +'+cr+'⚛️ Ядер':'')+(loseHc?' +'+loseHc+'🩸 Мутаген-Кристаллов!':''));exitTD(0);return}}}
+if(Math.hypot(trg.x-m.x,trg.y-m.y)<sp+4){m.wp++;if(m.wp>=td.path.length){if(!(isAdmin()&&td.godBase)){let dmgBase=(m.boss&&!pvp.act)?9999:(m.boss?12:(m.mini?4:1));td.hp=Math.max(0,td.hp-dmgBase)}td.mobs.splice(i,1);updTdUi();shk=12;if(pvp.act)fetch(PVP_URL+'/rooms/'+pvp.room+'/'+pvp.role+'/hp.json',{method:'PUT',body:JSON.stringify(Math.max(0,td.hp))}).catch(()=>{});if(td.hp<=0){if(pvp.act){finishPvpMatch(0);return}let cr=Math.floor(td.wv/10),loseAtp=td.wv>1?(td.wv*2):0,loseHc=(td.diff===6&&td.wv>=10)?Math.min(80,Math.floor(td.wv*1.6)):0;save.atp+=loseAtp;save.cores+=cr;save.hcGems=(save.hcGems||0)+loseHc;sv();alert('💀 БАЗА ПРОРВАНА! Награда: +'+loseAtp+'💎 АТФ'+(cr?' и +'+cr+'⚛️ Ядер':'')+(loseHc?' +'+loseHc+'🩸 Мутаген-Кристаллов!':''));exitTD(0);return}}}
 }
 for(let j=td.allies.length-1;j>=0;j--){
 let al=td.allies.at(j),trg=td.path.at(al.wp);if(!trg){td.allies.splice(j,1);continue}
@@ -5376,6 +5518,7 @@ if(headStartT<=0&&mode===5){canteenT--;stgE.innerText='Пицца: '+pizzaGot+'/
 if(cook.cd%35===0)addSplat(cook.x,cook.y,36,'rgba(217,4,41,.38)',1);
 for(let sp of splats)if(sp.tox&&Math.hypot(p.x-sp.x,p.y-sp.y)<p.r+sp.r){p.slow=Math.max(p.slow,25);borschtMark=240}
 if(borschtMark>0)hiddenInPuree=0;
+if(canteenT%900===0&&purees.length<4){let px,py,tr=0;do{tr++;px=400+Math.random()*3200;py=400+Math.random()*3200}while(hitWall(px,py,60)&&tr<50);purees.push({x:px,y:py,r:58})}
 if(pizzaGot>=3&&janitors.length===0){showNot('🧹 ПОВАРИХА ВЫЗВАЛА ДЕЖУРНЫХ СО ШВАБРАМИ!','#ff4d6d',220,0);for(let k=0;k<3;k++)janitors.push({x:1000+k*1000,y:1000+k*900,r:24,a:Math.random()*6.28})}
 for(let jn of janitors){
   if((jn.stun||0)>0){jn.stun--;continue}
@@ -6074,7 +6217,7 @@ try{
     else if(lastM.ts>lastSeenMsgTs&&lastM.uid!==save.uid){setChatBangs(1)}
   }
 }catch(e){}
-},4000);
+},12000);
 
 const UT_QUOTES=[
   'что? ты думал, что я просто буду стоять на одном месте и терпеть это?',
