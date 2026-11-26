@@ -1033,6 +1033,8 @@ function closeRoomModal(){
     pvp.myQKey='';
   }
   if(pvp.privRm){fetch(PVP_URL+'/rooms/'+pvp.privRm+'.json',{method:'DELETE'}).catch(()=>{});pvp.privRm=''}
+  if(coop.privRm){fetch(COOP_URL+'/rooms/'+coop.privRm+'.json',{method:'DELETE'}).catch(()=>{});coop.privRm=''}
+  coop.invOpen=0;
 }
 let curInvite=null,lastInvTs=0;
 async function renderInviteOnlineList(code,md){
@@ -3711,7 +3713,11 @@ document.getElementById('tdDiffInfo').innerHTML=td.diff===6?('Волн: <b>50</b
 document.getElementById('tdPlayModal').style.display='flex';
 }
 function togTdPause(st){
-if(mini!==6)return;snd('click');paused=st;
+if(mini!==6)return;snd('click');
+if(!coop.act||coop.isHost){
+  paused=st;
+  if(coop.act)pushCoopEv({tp:'pause',st:st});
+}
 let ac=document.getElementById('tdAdmCheats');if(ac)ac.style.display=isAdmin()?'block':'none';
 document.getElementById('tdPauseModal').style.display=st?'flex':'none';
 }
@@ -3774,7 +3780,12 @@ td.sel=-1;td.zm=.72;td.maxPl=0;let mb=document.getElementById('tdMaxPlBtn');if(m
 updTdUi();showNot('🛡️ РАССТАВЬТЕ БАШНИ И НАЖМИТЕ «НАЧАТЬ БОЙ»!','#00f5d4',240,0);
 }
 function togTdZm(){snd('click');td.zm=td.zm===.72?.45:(td.zm===.45?1:.72);document.getElementById('tdZmBtn').innerText='🔍 '+td.zm+'x';let szW=pvp.act?1660:TD_MAPS.at(td.map).sz,szH=pvp.act?500:TD_MAPS.at(td.map).sz,pad=450/td.zm;td.camX=Math.max(-pad,Math.min(szW-w/td.zm+pad,td.camX));td.camY=Math.max(-pad,Math.min(szH-h/td.zm+pad,td.camY))}
-function togTdSpd(){snd('click');td.spd=td.spd===1?2:(td.spd===2?3:(td.spd===3?4:(td.spd===4?5:(td.spd===5?10:(td.spd===10?20:1)))));if(td.spd>=5)unlock('a94');document.getElementById('tdSpdBtn').innerText='⏩ x'+td.spd}
+function togTdSpd(){
+  if(coop.act&&!coop.isHost){showNot('👑 Скорость меняет только создатель отряда!','#ff9f1c',90,0);return}
+  snd('click');td.spd=td.spd===1?2:(td.spd===2?3:(td.spd===3?4:(td.spd===4?5:(td.spd===5?10:(td.spd===10?20:1)))));
+  if(td.spd>=5)unlock('a94');document.getElementById('tdSpdBtn').innerText='⏩ x'+td.spd;
+  if(coop.act)pushCoopEv({tp:'spd',spd:td.spd});
+}
 function togTdMaxPl(){snd('click');td.maxPl=td.maxPl?0:1;let b=document.getElementById('tdMaxPlBtn');b.innerText='⭐ Макс: '+(td.maxPl?'ВКЛ':'ВЫКЛ');b.classList.toggle('act',!!td.maxPl)}
 function forceTdWave(fromCoop=0){if(mini!==6||!td.started||td.spLeft>0||td.wv>=td.maxWv)return;snd('bell');if(!fromCoop&&coop.act)pushCoopEv({tp:'wave',wv:td.wv+1});td.breakT=0;td.gold+=18+td.wv*2;td.wv++;addQuestProg('tdWave',1);startTdWave()}
 function getTdDetections(tp,lv,hasMic=0){
@@ -4007,7 +4018,8 @@ function nearTdPath(wx,wy,maxD=160){
   return best<maxD?{x:bx,y:by,wp:wp}:null;
 }
 function exitTD(win){
-mini=0;coop.act=0;clearInterval(coop.pollT);document.getElementById('tdBar').style.display='none';document.getElementById('tdAbBar').style.display='none';document.getElementById('tdStartWaveBtn').style.display='none';document.getElementById('tdPauseModal').style.display='none';
+if(coop.act&&coop.isHost&&coop.room)fetch(COOP_URL+'/rooms/'+coop.room+'.json',{method:'DELETE'}).catch(()=>{});
+mini=0;coop={act:0,room:'',need:2,isHost:0,pollT:null,seenEv:{},evSeq:0,myQKey:'',privRm:'',invOpen:0};clearInterval(coop.pollT);document.getElementById('tdBar').style.display='none';
 jz.style.display='block';bBtn.style.display='flex';shkBtn.style.display='flex';setTdHudVis(1);
 if(td.wv>(save.tdBestWv||0))save.tdBestWv=td.wv;
 if(!win&&td.wv>1)addBpXp(td.wv*2);
@@ -4284,7 +4296,9 @@ const COOP_URL=CLOUD_URL+'coop_td';
 let coop={act:0,room:'',need:2,isHost:0,pollT:null,seenEv:{},evSeq:0,myQKey:'',privRm:''};
 function openHcCoopLobby(need){
   snd('click');document.getElementById('tdPlayModal').style.display='none';
-  coop.need=need;roomMode='coop';
+  clearInterval(coop.pollT);
+  coop={act:0,room:'',need:need,isHost:0,pollT:null,seenEv:{},evSeq:0,myQKey:'',privRm:'',invOpen:0};
+  roomMode='coop';
   document.getElementById('roomTitle').innerText=(need===2?'👥 ХАРДКОР ДУО (2 ИГРОКА)':'👨‍👩‍👦 ХАРДКОР ТРИО (3 ИГРОКА)');
   document.getElementById('roomSub').innerText='Совместная оборона на одной карте! Общая база 15❤️ и общая победа.';
   document.getElementById('roomCodeInp').value='';
@@ -4304,9 +4318,10 @@ function renderCoopWaitRoom(rmId,code){
     try{
       let r=await fetch(COOP_URL+'/rooms/'+rmId+'.json');let rm=r.ok?await r.json():null;
       if(!rm)return;
+      if(coop.isHost)fetch(COOP_URL+'/rooms/'+rmId+'/t.json',{method:'PUT',body:JSON.stringify(Date.now())}).catch(()=>{});
       let pls=Object.values(rm.players||{});
       if(rm.started||(pls.length>=rm.need)){
-        clearInterval(coop.pollT);coop.invOpen=0;
+        clearInterval(coop.pollT);coop.invOpen=0;coop.privRm='';
         if(coop.isHost&&!rm.started)await fetch(COOP_URL+'/rooms/'+rmId+'/started.json',{method:'PUT',body:'1'});
         launchHcCoopMatch(rmId,rm.map,rm.need,pls);
         return;
@@ -4338,9 +4353,10 @@ async function startHcCoopQueue(){
   let r=await fetch(COOP_URL+'/rooms.json');let all=(r.ok?await r.json():null)||{};
   for(let k in all){
     let rm=all[k];
-    if(rm&&!rm.started&&rm.need===coop.need&&Date.now()-(rm.t||0)<30000){
+    if(!rm||Date.now()-(rm.t||0)>25000){fetch(COOP_URL+'/rooms/'+k+'.json',{method:'DELETE'}).catch(()=>{});continue}
+    if(!rm.started&&rm.need===coop.need){
       let pls=Object.values(rm.players||{});
-      if(pls.length<rm.need&&!rm.players[save.uid]){
+      if(pls.length<rm.need&&(!rm.players||!rm.players[save.uid])){
         joinHcCoopRoom(k.replace('hc_',''));return;
       }
     }
@@ -4354,8 +4370,9 @@ function pushCoopEv(ev){
 }
 function launchHcCoopMatch(rmId,mapIdx,need,pls){
   document.getElementById('roomModal').style.display='none';
+  let wasHost=coop.isHost?1:0;
   td.diff=6;td.map=mapIdx;td.squad=need;
-  coop={act:1,room:rmId,need:need,isHost:coop.isHost,pollT:null,seenEv:{},evSeq:0};
+  coop={act:1,room:rmId,need:need,isHost:wasHost,pollT:null,seenEv:{},evSeq:0};
   startTdMatch(1);
   let mates=pls.filter(v=>v.uid!==save.uid).map(v=>v.nick).join(', ')||'Напарники';
   showNot('🤝 ОТРЯД В СБОРЕ! Напарники: '+mates,'#00f5d4',260,0);
@@ -4377,6 +4394,10 @@ function launchHcCoopMatch(rmId,mapIdx,need,pls){
           beginTdMatch(1);
         }else if(ev.tp==='wave'&&td.wv<ev.wv){
           td.breakT=0;td.wv=ev.wv;startTdWave();
+        }else if(ev.tp==='spd'){
+          td.spd=ev.spd;document.getElementById('tdSpdBtn').innerText='⏩ x'+td.spd;
+        }else if(ev.tp==='pause'){
+          paused=ev.st;
         }else if(ev.tp==='ab'){
           let t=td.towers.find(v=>v.id===ev.tid);if(t)triggerTdAbility(t,1);
         }
