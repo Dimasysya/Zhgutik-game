@@ -333,6 +333,7 @@ textarea.svtxt{width:100%;height:78px;background:rgba(0,0,0,.5);color:#00f5d4;bo
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:8px">
   <button class="dfbtn" style="padding:6px;border-color:#ffd166;color:#ffd166" onclick="admGrantPreset('tw_all')">🏰 Все башни TD (70)</button>
   <button class="dfbtn" style="padding:6px;border-color:#38bdf8;color:#38bdf8" onclick="admGrantPreset('tw_one')">➕ Башня по ID (0-69)</button>
+  <button class="dfbtn" style="padding:6px;border-color:#ff4d6d;color:#ff4d6d;grid-column:span 2" onclick="admGrantPreset('tw_rem')">➖ Убрать башню по ID (0-69)</button>
   <button class="dfbtn" style="padding:6px;border-color:#f59e0b;color:#f59e0b" onclick="admGrantPreset('mast_all')">🎖️ Мастерство 10 ВСЕМ</button>
   <button class="dfbtn" style="padding:6px;border-color:#fbbf24;color:#fbbf24" onclick="admGrantPreset('mast_one')">🎖️ Мастерство по ID</button>
   <button class="dfbtn" style="padding:6px;border-color:#e879f9;color:#e879f9" onclick="admGrantPreset('td_skins')">🎨 Все скины башен</button>
@@ -1640,8 +1641,14 @@ keys.forEach(k=>{
   box.appendChild(div);
 });
 }
+let admUnlocked=0;
 async function openAdminPanel(){
 if(!isAdmin())return;
+if(!admUnlocked){
+  let code=prompt('🔐 Введите ПИН-код Админ-панели:','');
+  if(code!=='0088'){snd('snap');showNot('❌ Неверный ПИН-код администратора!','#d90429',150,0);return}
+  admUnlocked=1;
+}
 snd('click');
 let box=document.getElementById('admList');
 box.innerHTML='<div style="text-align:center;color:#7ef9ff">⏳ Загрузка аккаунтов...</div>';
@@ -1741,6 +1748,15 @@ else if(pr==='tw_misha'){d.tdOwn[64]=1;showNot('🧯 Выдан эксклюзи
 else if(pr==='tw_archon'){d.tdOwn.fill(1,31,33);showNot('👑 Выданы башни Архонта!','#f43f5e',120,0)}
 else if(pr==='hc_gems'){d.hcGems=(d.hcGems||0)+5000;showNot('🩸 Выдано +5000 Мутаген-Кристаллов!','#f43f5e',120,0)}
 else if(pr==='tw_one'){let id=parseInt(prompt('ID башни (0-69):','69'));if(id>=0&&id<=69){d.tdOwn[id]=1;showNot('✅ Башня #'+id+' выдана!','#38bdf8',120,0)}}
+else if(pr==='tw_rem'){
+  let id=parseInt(prompt('Какой ID башни забрать у игрока (0-69)?','69'));
+  if(id>=0&&id<=69){
+    d.tdOwn[id]=0;
+    if(Array.isArray(d.tdEq)){d.tdEq=d.tdEq.filter(v=>v!==id);if(d.tdEq.length===0)d.tdEq=Array.of(0)}
+    if(Array.isArray(d.tdDecks))d.tdDecks=d.tdDecks.map(dk=>{let f=Array.isArray(dk)?dk.filter(v=>v!==id):[];return f.length>0?f:Array.of(0)});
+    showNot('➖ Башня #'+id+' ('+(TD_DEFS[id]?TD_DEFS[id].n:'')+') удалена у игрока!','#ff4d6d',140,0);
+  }
+}
 else if(pr==='mast_all'){if(!d.tdMast)d.tdMast={};if(!d.tdSkOwn)d.tdSkOwn={};for(let i=0;i<70;i++){d.tdMast[i]=150000;d.tdSkOwn['m10_'+i]=1}showNot('🎖️ Выдан 10 ранг Мастерства + скины всем 70 башням!','#f59e0b',140,0)}
 else if(pr==='mast_one'){let id=parseInt(prompt('ID башни для мастерства (0-69):','69'));if(id>=0&&id<=69){let rnk=Math.max(1,Math.min(10,parseInt(prompt('Какой ранг мастерства выдать (1-10)?','10'))||10));if(!d.tdMast)d.tdMast={};d.tdMast[id]=MAST_REQ.at(rnk-1);if(rnk>=10){if(!d.tdSkOwn)d.tdSkOwn={};d.tdSkOwn['m10_'+id]=1}showNot('🎖️ Башне #'+id+' выдан '+rnk+' ранг Мастерства!','#fbbf24',140,0)}}
 else if(pr==='td_skins'){if(!d.tdSkOwn)d.tdSkOwn={};for(let k in TD_SKINS)TD_SKINS[k].forEach(s=>d.tdSkOwn[s.id]=1);for(let i=0;i<70;i++)d.tdSkOwn['m10_'+i]=1;showNot('🎨 Открыты ВСЕ скины башен (включая 10 ранг)!','#e879f9',140,0)}
@@ -4416,7 +4432,7 @@ if(td.sel<0)return;
 if(pvp.act&&(wx<20||wx>730||wy<20||wy>480)){showNot('🚫 Нельзя ставить башни на чужой территории!','#ff4d6d',90,0);return}
 let twId=save.tdEq.at(td.sel),df=TD_DEFS.at(twId),myRad=df.rad||21;
 for(let i=0;i<td.path.length-1;i++){let a=td.path.at(i),b=td.path.at(i+1),dx=b.x-a.x,dy=b.y-a.y,l2=dx*dx+dy*dy,t=l2?Math.max(0,Math.min(1,((wx-a.x)*dx+(wy-a.y)*dy)/l2)):0;if(Math.hypot(wx-(a.x+t*dx),wy-(a.y+t*dy))<myRad+14){showNot('Нельзя ставить на тропу!','#ff4d6d',80,0);return}}
-let maxField=pvp.act?30:(td.diff===6?(td.squad===3?80:(td.squad===2?65:50)):50);if(td.towers.length>=maxField){showNot('Достигнут лимит поля: максимум '+maxField+' башен!','#ff9f1c',110,0);return}
+let maxField=pvp.act?30:(td.diff===6?(td.squad===3?65:(td.squad===2?55:50)):50);if(td.towers.length>=maxField){showNot('Достигнут лимит поля: максимум '+maxField+' башен!','#ff9f1c',110,0);return}
 let sameCnt=td.towers.filter(t=>t.tp===twId).length;if(sameCnt>=df.lim){showNot('Лимит этой башни: '+df.lim+' шт.!','#ff9f1c',100,0);return}
 let totC=df.c,stLv=1;
 if(td.maxPl){stLv=twId===65?6:5;if(twId===28||twId===29)totC=150000;else for(let l=1;l<stLv;l++)totC+=(twId===65?Math.round(df.c*1.45*Math.pow(1.98,l-1)):Math.round(df.c*1.15*Math.pow(1.48,l-1)))}
