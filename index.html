@@ -430,9 +430,10 @@ textarea.svtxt{width:100%;height:78px;background:rgba(0,0,0,.5);color:#00f5d4;bo
 <input id="clNick" type="text" placeholder="Ваш ник" style="padding:6px;border-radius:8px;border:1px solid #7ef9ff;background:rgba(0,0,0,.5);color:#fff;font-size:11px;user-select:text;-webkit-user-select:text">
 <input id="clPin" type="password" placeholder="ПИН-код (напр. 1234)" style="padding:6px;border-radius:8px;border:1px solid #ffd166;background:rgba(0,0,0,.5);color:#ffd166;font-size:11px;user-select:text;-webkit-user-select:text">
 </div>
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:8px">
-<button class="mbtn" style="background:linear-gradient(90deg,#00b4d8,#00f5d4);font-size:11px;padding:6px" onclick="cloudSave()">☁️ В ОБЛАКО</button>
-<button class="mbtn" style="background:#ff9f1c;color:#fff;font-size:11px;padding:6px" onclick="cloudLoad()">☁️ ИЗ ОБЛАКА</button>
+<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;margin-bottom:8px">
+<button class="mbtn" style="background:linear-gradient(90deg,#00b4d8,#00f5d4);font-size:10px;padding:6px 2px" onclick="cloudSave()">☁️ В ОБЛАКО</button>
+<button class="mbtn" style="background:#ff9f1c;color:#fff;font-size:10px;padding:6px 2px" onclick="cloudLoad()">☁️ ИЗ ОБЛАКА</button>
+<button class="mbtn" style="background:#a855f7;color:#fff;font-size:10px;padding:6px 2px" onclick="changeCloudPin()">🔑 ПИН</button>
 </div>
 <div style="font-size:10px;color:#cbd5e1;margin-bottom:4px">📋 Или резервный текстовый код:</div>
 <textarea id="svBox" class="svtxt" placeholder="Здесь появится код сохранения..."></textarea>
@@ -1335,6 +1336,17 @@ if(!res.ok)throw new Error(res.status);
 snd('evo');renderMenu();showNot('☁️ АККАУНТ СОХРАНЁН В ОБЛАКО!','#00f5d4',220,0);
 }catch(e){showNot('❌ Ошибка облака: '+e.message,'#d90429',200,0)}
 }
+async function changeCloudPin(){
+  if(!save.nick||!save.pin||save.pin.length<3){showNot('❌ Сначала сохраните аккаунт в облако!','#d90429',160,0);return}
+  let oldP=prompt('Введите ТЕКУЩИЙ ПИН-код:','');
+  if(oldP!==save.pin){snd('snap');showNot('❌ Неверный текущий ПИН!','#d90429',150,0);return}
+  let newP=prompt('Введите НОВЫЙ ПИН-код (от 3 символов):','');
+  if(!newP||newP.trim().length<3){showNot('❌ ПИН должен быть от 3 символов!','#d90429',150,0);return}
+  newP=newP.trim();save.pin=newP;sv();
+  document.getElementById('clPin').value=newP;
+  await fetch(CLOUD_URL+'users/'+cleanKey(save.nick)+'/pin.json',{method:'PUT',body:JSON.stringify(newP)});
+  snd('evo');showNot('🔑 ПИН-КОД УСПЕШНО ИЗМЕНЁН!','#a8ff78',200,0);
+}
 let cloudTimer=null,cloudReady=0;
 function autoCloudSync(urgent=0){
 if(!cloudReady||!save.nick||!save.pin||save.pin.length<3)return;
@@ -1359,7 +1371,7 @@ let res=await fetch(CLOUD_URL+'users/'+key+'.json');
 let obj=res.ok?await res.json():null;
 if(obj&&obj.pin===save.pin&&obj.data){
 let locT=save.lastSync||0,srvT=obj.t||0,admF=obj.data.adminForce||0;
-if(admF>(save.adminForce||0)||(srvT>locT&&!locT)){
+if(admF>(save.adminForce||0)||(srvT>locT+5000)){
 save={...save,...obj.data,pin:save.pin,lastSync:Math.max(srvT,admF,Date.now())};
 if(!Array.isArray(save.tdOwn))save.tdOwn=Object.assign(Array(70).fill(0),save.tdOwn||{});
 while(save.tdOwn.length<70)save.tdOwn.push(0);
@@ -1507,7 +1519,7 @@ d.className='aitem'+(isMe?' done':'');d.style.cursor='pointer';
 d.onclick=()=>openPlayerProfile(i);
 let pIc=(p2.pet&&PETS.find(v=>v.id===p2.pet))?(PETS.find(v=>v.id===p2.pet).ic+' '):'';
 let val=getSc(p2),rightTxt=lbTab==='time'?('⏱️ '+fmtPlayTime(val)):('👑 '+val);
-d.innerHTML='<b>#'+(i+1)+' '+(on?'🟢 ':'⚫ ')+(i===0?'👑 ':i===1?'🥈 ':i===2?'🥉 ':'')+pIc+p2.nick+(isMe?' (Вы)':'')+'</b> <span style="color:#ffd166;float:right">'+rightTxt+'</span><br><span style="color:#adb5bd">⏱️ '+fmtPlayTime(p2.playSec)+' | 🧬 '+Math.round(p2.dna||0)+' | 🏆 '+p2.ach+'/130 | 🏰 '+(p2.tw||1)+'/67</span>';
+d.innerHTML='<b>#'+(i+1)+' '+(on?'🟢 ':'⚫ ')+(i===0?'👑 ':i===1?'🥈 ':i===2?'🥉 ':'')+pIc+p2.nick+(isMe?' (Вы)':'')+'</b> <span style="color:#ffd166;float:right">'+rightTxt+'</span><br><span style="color:#adb5bd">⏱️ '+fmtPlayTime(p2.playSec)+' | 🧬 '+Math.round(p2.dna||0)+' | 🏆 '+p2.ach+'/130 | 🏰 '+(p2.tw||1)+'/68</span>';
 box.appendChild(d);
 });
 }
@@ -3874,6 +3886,7 @@ let cnt=0,upgraded=1;
 while(upgraded){
   upgraded=0;
   for(let tw of td.towers){
+    if(tw.allyNick)continue;
     let maxLv=tw.tp===65?6:5;if(tw.lv>=maxLv)continue;
     let df=TD_DEFS.at(tw.tp),upC=(tw.tp===28||tw.tp===29)?((tw.lv+1)*10000):(tw.tp===65?Math.round(df.c*1.45*Math.pow(1.98,tw.lv-1)):Math.round(df.c*1.15*Math.pow(1.48,tw.lv-1)));
     if(td.gold>=upC){td.gold-=upC;tw.lv++;tw.spent+=upC;cnt++;upgraded=1;if(coop.act)pushCoopEv({tp:'upg',tid:tw.id,lv:tw.lv});if(tw.lv>=5)unlock('a86')}
@@ -4054,6 +4067,7 @@ function triggerTdAbility(tw,fromCoop=0){
     }
   }else if(tw.tp===68){
     let cands=td.towers.filter(t=>t!==tw&&!t.isHolo&&t.tp!==68&&Math.hypot(t.x-tw.x,t.y-tw.y)<=rng+80).sort((a,b)=>(TD_DEFS.at(b.tp).c*b.lv)-(TD_DEFS.at(a.tp).c*a.lv));
+    if(cands.length===0){tw.abCd=0;showNot('💻 Рядом нет башен для голограммы!','#00f5d4',90,0);return}
     let clCnt=tw.lv>=5?2:1;
     td.towers=td.towers.filter(t=>!(t.isHolo&&t.owner===tw));
     for(let c2=0;c2<Math.min(clCnt,cands.length);c2++){
@@ -5074,6 +5088,13 @@ if(tw.tp===13){if(tw.cd<=0){tw.cd=Math.max(360,660-tw.lv*55);if(td.hp<25){td.hp=
 if(tw.tp===15||tw.tp===43||tw.tp===61){if(tw.cd<=0){let isM=(tw.tp===43),isD=(tw.tp===61);tw.cd=isM?Math.max(150,260-tw.lv*20):(isD?Math.max(115,200-tw.lv*16):Math.max(75,165-tw.lv*16));let endPt=td.path.at(td.path.length-1),cntD=isD?(tw.lv>=5?3:(tw.lv>=3?2:1)):1;for(let d2=0;d2<cntD;d2++){let ahp=isM?Math.round((280+td.wv*80)*Math.pow(1.65,tw.lv-1)):Math.round((190+td.wv*55)*Math.pow(1.45,tw.lv-1));td.allies.push({x:endPt.x-d2*18,y:endPt.y,wp:td.path.length-2,hp:ahp,mhp:ahp,lv:tw.lv,veh:isM?1:0,deer:isD?1:0,a:0,scd:10,owner:tw})}}continue}
 if(tw.tp===18){if(tw.cd<=0){tw.cd=210;let gld=12+tw.lv*5;td.gold+=gld;addTdMastXp(18,2);updTdUi();td.nums.push({x:tw.x,y:tw.y-16,t:'+'+gld+'💰',c:'#ffd166',l:26})}continue}
 if(tw.tp===19||tw.tp===27){if(tw.cd<=0){tw.cd=tw.tp===19?320:220;if(tw.tp===19){for(let s2 of td.towers)if(s2!==tw&&Math.hypot(s2.x-tw.x,s2.y-tw.y)<=rng)s2.cd=0;if(step===0)td.booms.push({x:tw.x,y:tw.y,r:rng,col:'#f472b6',l:14})}else{let pt=nearTdPath(tw.x,tw.y,rng+30);if(pt&&td.zones.length<35)td.zones.push({tp:'puree',x:pt.x,y:pt.y,r:34+tw.lv*4,dmg:25+td.wv*8*tw.lv,l:240})}}continue}
+if(tw.tp===25||tw.tp===58){
+  let oc=2+tw.lv,oDmg=(tDef.dmg*Math.pow(1.65,tw.lv-1))*(1+getMastInfo(tw.tp).bonus)*.18;
+  for(let k=0;k<oc;k++){
+    let oa=Date.now()/280+k*(6.283/oc),ox=tw.x+Math.cos(oa)*(rng*.68),oy=tw.y+Math.sin(oa)*(rng*.68);
+    for(let m of td.mobs)if(Math.hypot(m.x-ox,m.y-oy)<m.r+11){m.hp-=oDmg;tw.totDmg=(tw.totDmg||0)+oDmg;m.lastHitTp=tw.tp;if(tw.tp===58){m.slow=Math.max(m.slow,45);m.slowStr=.45}}
+  }
+}
 if(tw.tp===24||tw.tp===34||tw.tp===45||tw.tp===55)continue;
 if(tw.tp===65){
   if(!Array.isArray(tw.sentries))tw.sentries=[];
@@ -5246,7 +5267,7 @@ else if(tw.tp===66){
     if(step===0){snd('punch');if(td.nums.length<22)td.nums.push({x:tg.x,y:tg.y-16,t:(isFin?'💥 -':'👊 -')+Math.round(pDmg),c:isFin?'#ffd166':'#38bdf8',l:24})}
     if(isFin){
       if(step===0&&td.booms.length<24)td.booms.push({x:tg.x,y:tg.y,r:48,col:'#38bdf8',l:9});
-      if(!tg.boss&&tg.wp>1){let kb=tw.lv>=4?2:1;tg.wp=Math.max(1,tg.wp-kb);let prv=td.path.at(tg.wp);tg.x=prv.x;tg.y=prv.y}
+      if(!tg.boss&&tg.wp>=1){let kb=tw.lv>=4?2:1;tg.wp=Math.max(1,tg.wp-kb);let prv=td.path.at(tg.wp-1)||td.path.at(0);tg.x=prv.x;tg.y=prv.y}
     }
   }
 }
@@ -6343,7 +6364,7 @@ function utBeginReply(){
   document.getElementById('utActBox').style.display='none';document.getElementById('utSubBox').style.display='none';
 }
 function utStartEnemyTurn(){
-  ut.state='dodge';ut.turn++;ut.t=0;ut.bul=[];ut.beams=[];ut.grav=0;
+  ut.state='dodge';ut.turn++;ut.t=0;ut.bul=[];ut.beams=[];ut.grav=0;ut.vy=0;
   let isP2=(ut.phase===2);
   ut.tBox=isP2?{x:125,y:105,w:230,h:132}:{x:150,y:112,w:180,h:124};
   ut.px=ut.tBox.x+ut.tBox.w/2;ut.py=ut.tBox.y+ut.tBox.h/2;
